@@ -13,7 +13,8 @@ Unlike generic code-intelligence tools that only analyze general-purpose code or
 - **Cross-Layer Graph Connection**: Links rules to the R functions called by their scripts (both direct and transitive dependencies).
 - **Impact Querying**: Traces downstream impact hierarchically across both layers starting from a rule or R function.
 - **Honest Confidence Labeling**: Tags every dependency/impact relationship with `HIGH`, `AMBIGUOUS`, or `UNRESOLVED`.
-- **Self-Contained HTML Export**: Generates an interactive force-directed graph visualization of the index with **zero external CDN dependencies** (works 100% offline).
+- **Self-Contained HTML Export**: Generates an interactive force-directed graph visualization of the index with **zero external CDN dependencies** (works 100% offline). Now featuring a premium, sleek tech aesthetic with a cyberpunk-inspired dark theme and monospace typography.
+- **GraphML Export**: Export the dependency index to a `.graphml` file for ingestion into advanced network analysis platforms like Cytoscape or Gephi.
 
 ---
 
@@ -60,10 +61,17 @@ python3 bigi-cli analyze test_pipeline --html test_pipeline/visualization.html
 Analyzing genomics pipeline at 'test_pipeline'...
 Analysis complete. Index saved to 'test_pipeline/.bigi_index.json'.
 Indexed 18 nodes and 26 edges.
-Interactive graph visualization exported to 'test_pipeline/visualization.html'.
+### 2. Exporting to GraphML (`export`)
+If you want to perform custom network analysis (e.g., PageRank, Centrality) in tools like Gephi or Cytoscape, you can export the graph:
+```bash
+python3 bigi-cli export my_graph.graphml --pipeline-dir test_pipeline
+```
+*Output:*
+```
+GraphML exported to 'my_graph.graphml'.
 ```
 
-### 2. Querying Downstream Impact (`impact`)
+### 3. Querying Downstream Impact (`impact`)
 
 #### Test Case A: Happy Path (`clean_names`)
 Querying `clean_names` (which is defined in `preprocess.R` and called inside `plot.R`):
@@ -142,8 +150,11 @@ Error: Symbol or rule 'nonexistent_symbol' not found in the index.
 
 ## Recent Updates
 
+- **GraphML Export Capability**: Added `bigi export <file>.graphml` to generate standardized XML graph files for external network analysis.
+- **Premium Visualization Redesign**: Stripped away generic gradients and glassmorphism from the HTML export, replacing it with a sleek, minimalist hacker aesthetic (solid `#0a0a0a` backgrounds, sharp `#00e5ff`/`#ff00aa` neon accents, JetBrains Mono font).
+- **Physics Simulation Control Fix**: Corrected the WASM physics engine so the pause/resume simulation button now accurately halts the layout calculations.
 - **Exponential DFS Traversal Fix**: Resolved a performance issue where the impact traversal explored all paths redundantly, which would cause the tool to hang on complex pipelines.
 - **Python `async def` Support**: The Python AST parser now correctly captures asynchronous functions.
-- **WASM Memory Safety**: Added array bounds checking for JS-provided link indices inside the Rust physics engine to prevent memory out-of-bounds crashes.
+- **WASM Memory Safety**: Added array bounds checking for JS-provided link indices inside the Rust physics engine to prevent memory out-of-bounds crashes, and implemented `wrapping_abs` in the hash grid to avoid integer overflow.
 - **WASM Initialization Optimization**: Replaced an O(N×E) index loop during WASM graph renderer initialization with an O(1) Map lookup.
 - **Graceful CLI Default**: Running `bigi` with no arguments now prints the help text instead of running a default analysis.
