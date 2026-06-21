@@ -1,7 +1,7 @@
 # BiGI: Universal Pipeline Intelligence Platform
 
 > **"What breaks if I change this?"**  
-> BiGI (BDB-Genomics Impact Graph) is a static analysis and visualization tool that traces code dependencies across your entire bioinformatics pipeline—connecting orchestration layers (Snakemake, Nextflow) directly to the underlying scripts (R, Python, Rust, Bash, etc.).
+> BiGI (Blast-radius Impact Graph Indexer) is a static analysis and visualization tool that traces code dependencies across your entire software pipeline—connecting orchestration layers (Snakemake, Nextflow) directly to the underlying scripts (R, Python, Rust, Bash, etc.).
 
 ---
 
@@ -10,6 +10,7 @@
 - **Cross-Layer Traceability**: Builds a single, unified graph connecting high-level pipeline rules to the low-level functions executed within their scripts.
 - **Universal Language Parsing**: Natively parses **Snakemake** and **Nextflow**. Automatically extracts ASTs for **R, Python, Bash, Rust, Go, C++, JavaScript**, and more.
 - **CI/CD "Blast Radius" Bot**: Automatically comments on GitHub Pull Requests, warning reviewers of the downstream impact of modified code before it merges.
+- **Interactive Git Tracking**: Directly integrates with Git to track local uncommitted changes, dynamically illuminating modified files in red and their downstream blast radius in orange directly on the canvas.
 - **Offline HTML Visualization**: Generates a self-contained, interactive force-directed graph with a premium dark-mode aesthetic. Zero external dependencies.
 - **GraphML Export**: Export your dependency index to `.graphml` for advanced network analysis in Cytoscape or Gephi.
 
@@ -40,7 +41,7 @@ bigi analyze path/to/pipeline --html output.html
 ### 2. Analyze a Remote GitHub Repository
 Pass a GitHub URL, and BiGI will clone it into a temporary workspace, analyze it, generate the graph, and instantly clean up the cloned code.
 ```bash
-bigi analyze https://github.com/your-org/genomics-pipeline.git --html output.html
+bigi analyze https://github.com/your-org/data-pipeline.git --html output.html
 ```
 
 ### 3. Query Downstream Impact (CLI)
