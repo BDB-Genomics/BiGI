@@ -192,6 +192,15 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install R dependencies
+        run: |
+          Rscript -e "install.packages('jsonlite')"
+
       - name: Install BiGI
         run: |
           python -m pip install --upgrade pip
