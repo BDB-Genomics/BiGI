@@ -50,6 +50,8 @@ def parse_python_file(file_path: str, base_dir: str) -> dict:
             
     DefVisitor().visit(tree)
 
+    schema_reads = []
+
     class CallVisitor(ast.NodeVisitor):
         def __init__(self):
             self.current_function = None
@@ -89,15 +91,28 @@ def parse_python_file(file_path: str, base_dir: str) -> dict:
                 })
             self.generic_visit(node)
             
+        def visit_Subscript(self, node):
+            if isinstance(node.slice, ast.Constant) and isinstance(node.slice.value, str):
+                if isinstance(node.value, ast.Name) and node.value.id in {"df", "data", "dataset", "df_filtered", "chunk"}:
+                    schema_reads.append({
+                        "column": node.slice.value,
+                        "file": rel_path,
+                        "line": node.lineno,
+                        "caller": self.current_function if self.current_function else ""
+                    })
+            self.generic_visit(node)
+            
     CallVisitor().visit(tree)
     
-    return {"definitions": definitions, "calls": calls}
+    return {"definitions": definitions, "calls": calls, "schemas": schema_reads}
 
 def parse_python_directory(directory_path: str) -> dict:
     """Recursively parses all Python files under directory_path, skipping non-source directories."""
     directory_path = os.path.abspath(directory_path)
     all_defs = []
     all_calls = []
+    
+    all_schemas = []
     
     exclude_dirs = {"data", "results", "output", "out", "envs", "conda", "venv", "node_modules", "build", "dist", "logs", "benchmarks", "assets"}
     
@@ -111,5 +126,7 @@ def parse_python_directory(directory_path: str) -> dict:
                 res = parse_python_file(file_path, directory_path)
                 all_defs.extend(res["definitions"])
                 all_calls.extend(res["calls"])
+                if "schemas" in res:
+                    all_schemas.extend(res["schemas"])
                 
-    return {"definitions": all_defs, "calls": all_calls}
+    return {"definitions": all_defs, "calls": all_calls, "schemas": all_schemas}

@@ -381,6 +381,33 @@ def build_graph(pipeline_dir: str) -> dict:
                 edges.append({"source": unresolved_id, "target": cid,
                                "type": "r_call", "confidence": "UNRESOLVED", "label": label, "detail": detail})
 
+    # --- Data Schema (Data Contracts) Edges ---
+    for s in py_data.get("schemas", []):
+        col_name = s["column"]
+        schema_id = f"schema:{col_name}"
+        _add_node(nodes, schema_id, type="schema", name=col_name, file=s["file"])
+        
+        file_path = s["file"]
+        caller_name = s.get("caller")
+        
+        if not caller_name:
+            caller_ids = [
+                f"rule:{r}"
+                for r in script_to_rules.get(os.path.normpath(file_path), [])
+            ]
+        else:
+            caller_ids = [f"function:{caller_name}@{file_path}"]
+            
+        for cid in caller_ids:
+            edges.append({
+                "source": schema_id,
+                "target": cid,
+                "type": "schema_dep",
+                "confidence": "HIGH",
+                "label": f"requires column '{col_name}'",
+                "detail": f"Reads dataframe column '{col_name}' at line {s['line']}"
+            })
+
     # Extract Git modified status to flag modified nodes in the visualization
     modified_files = set()
     try:

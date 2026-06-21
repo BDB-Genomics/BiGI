@@ -247,6 +247,101 @@ def _cmd_pr_report(args: argparse.Namespace) -> int:
 
     return 0
 
+def _cmd_remediate(args: argparse.Namespace) -> int:
+    """Execute the ``remediate`` sub-command."""
+    pipeline_dir: str = args.pipeline_dir
+    symbol: str = args.symbol_or_rule_name
+    prompt: str = args.prompt
+
+    graph = load_index(pipeline_dir)
+    if graph is None:
+        index_path = os.path.join(pipeline_dir, ".bigi_index.json")
+        print(f"Error: Index not found at '{index_path}'.", file=sys.stderr)
+        return 1
+
+    results = trace_impact(graph, symbol)
+    if results is None:
+        print(f"Error: Symbol '{symbol}' not found in the index.", file=sys.stderr)
+        return 1
+
+    # Find the code for the symbol
+    code_content = None
+    file_path = None
+    rule_id = f"rule:{symbol}"
+    target_node = None
+    if rule_id in graph["nodes"]:
+        target_node = graph["nodes"][rule_id]
+    else:
+        func_prefix = f"function:{symbol}@"
+        for node_id, node in graph["nodes"].items():
+            if node_id.startswith(func_prefix):
+                target_node = node
+                break
+                
+    if target_node:
+        code_content = target_node.get("code") or target_node.get("script")
+        file_path = target_node.get("file")
+        
+    if not code_content and file_path:
+        full_path = os.path.join(pipeline_dir, file_path)
+        try:
+            with open(full_path, "r", encoding="utf-8") as f:
+                code_content = f.read()
+        except:
+            pass
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("Error: GEMINI_API_KEY environment variable not set.", file=sys.stderr)
+        print("Please set your Gemini API key to use the AI Auto-Remediation feature.", file=sys.stderr)
+        return 1
+
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-1.5-pro")
+        
+        full_prompt = (
+            f"You are an AI code remediation assistant. You are tasked with fixing a pipeline issue.\n\n"
+            f"Target Symbol/Rule: {symbol}\n"
+            f"File: {file_path}\n\n"
+            f"User Prompt: {prompt}\n\n"
+            f"Downstream Impact (Context):\n" + "\n".join(results) + "\n\n"
+        )
+        if code_content:
+            full_prompt += f"Current Code:\n```\n{code_content}\n```\n\n"
+        
+        full_prompt += "Please provide the patched code or a detailed suggested fix. Only output the corrected code and a brief explanation."
+        
+        print(f"🤖 Analyzing impact for '{symbol}' and generating remediation strategy with Gemini...")
+        response = model.generate_content(full_prompt)
+        print("\n✨ AI Remediation Suggestion:\n")
+        print(response.text)
+        
+    except ImportError:
+        print("Error: 'google-generativeai' package not installed.", file=sys.stderr)
+        print("Please install it via 'pip install google-generativeai' to use this feature.", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Error during AI generation: {e}", file=sys.stderr)
+        return 1
+        
+    return 0
+
+def _cmd_monitor(args: argparse.Namespace) -> int:
+    """Execute the ``monitor`` sub-command."""
+    html_path = args.html
+    log_path = args.log
+    port = args.port
+    
+    if not os.path.exists(html_path):
+        print(f"Error: HTML file '{html_path}' not found.", file=sys.stderr)
+        return 1
+        
+    from .server import run_server
+    run_server(html_path, log_path, port)
+    return 0
+
 def main() -> None:
     """Parse CLI arguments and dispatch to the appropriate sub-command."""
     parser = argparse.ArgumentParser(
@@ -316,6 +411,44 @@ def main() -> None:
         help="Path to export the interactive HTML visualization of the impact.",
     )
 
+    remediate_parser = subparsers.add_parser(
+        "remediate",
+        help="AI Auto-Remediation: suggest code patches using LLM considering pipeline impact.",
+    )
+    remediate_parser.add_argument(
+        "symbol_or_rule_name",
+        help="Name of the Snakemake rule or R function to remediate.",
+    )
+    remediate_parser.add_argument(
+        "--prompt",
+        required=True,
+        help="The prompt describing the issue or required change.",
+    )
+    remediate_parser.add_argument(
+        "--pipeline-dir",
+        default=".",
+        help="Path to the pipeline directory containing the built index (default: current directory).",
+    )
+
+    monitor_parser = subparsers.add_parser(
+        "monitor",
+        help="Live Execution Overlay: serve graph HTML and stream live execution status.",
+    )
+    monitor_parser.add_argument(
+        "--html",
+        required=True,
+        help="Path to the BiGI interactive HTML file.",
+    )
+    monitor_parser.add_argument(
+        "--log",
+        help="Path to the Snakemake or Nextflow log file to tail.",
+    )
+    monitor_parser.add_argument(
+        "--port",
+        type=int,
+        default=8080,
+        help="HTTP server port.",
+    )
 
     args_list = sys.argv[1:]
     if len(sys.argv) == 1:
@@ -354,6 +487,8 @@ def main() -> None:
         "impact": _cmd_impact,
         "export": _cmd_export,
         "pr-report": _cmd_pr_report,
+        "remediate": _cmd_remediate,
+        "monitor": _cmd_monitor,
     }
     sys.exit(dispatch[args.command](args))
 
