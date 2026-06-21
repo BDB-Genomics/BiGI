@@ -363,17 +363,30 @@ def build_graph(pipeline_dir: str) -> dict:
     # Extract Git modified status to flag modified nodes in the visualization
     modified_files = set()
     try:
-        res_git = subprocess.run(
-            ["git", "status", "--porcelain"],
-            cwd=pipeline_dir,
-            capture_output=True, text=True, check=True
-        )
-        for line in res_git.stdout.splitlines():
-            if len(line) > 3:
-                fpath = line[3:].strip()
-                if " -> " in fpath:
-                    fpath = fpath.split(" -> ")[-1]
-                modified_files.add(os.path.normpath(fpath))
+        if os.environ.get("GITHUB_BASE_REF"):
+            # In a GitHub PR, compare against the base branch
+            base_ref = os.environ.get("GITHUB_BASE_REF")
+            res_git = subprocess.run(
+                ["git", "diff", "--name-only", f"origin/{base_ref}"],
+                cwd=pipeline_dir,
+                capture_output=True, text=True, check=True
+            )
+            for line in res_git.stdout.splitlines():
+                if line.strip():
+                    modified_files.add(os.path.normpath(line.strip()))
+        else:
+            # Local working directory: check uncommitted changes
+            res_git = subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=pipeline_dir,
+                capture_output=True, text=True, check=True
+            )
+            for line in res_git.stdout.splitlines():
+                if len(line) > 3:
+                    fpath = line[3:].strip()
+                    if " -> " in fpath:
+                        fpath = fpath.split(" -> ")[-1]
+                    modified_files.add(os.path.normpath(fpath))
     except Exception:
         pass
 

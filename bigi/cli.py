@@ -203,6 +203,50 @@ def _cmd_export(args: argparse.Namespace) -> int:
         return 1
 
     return 0
+
+def _cmd_pr_report(args: argparse.Namespace) -> int:
+    """Execute the ``pr-report`` sub-command."""
+    pipeline_dir: str = args.pipeline_dir
+    output_path: str = args.output
+
+    graph = load_index(pipeline_dir)
+    if graph is None:
+        index_path = os.path.join(pipeline_dir, ".bigi_index.json")
+        print(f"Error: Index not found at '{index_path}'.", file=sys.stderr)
+        return 1
+
+    modified_nodes = [node for node in graph.get("nodes", {}).values() if node.get("git_modified")]
+    
+    if not modified_nodes:
+        report = "✅ **BiGI Blast Radius Report**: No modified rules or functions detected in the pipeline."
+    else:
+        report = "💥 **BiGI Blast Radius Report** 💥\n\n"
+        report += "The following rules/functions were modified in this PR. Here is the downstream impact:\n\n"
+        
+        # Deduplicate by name
+        seen_names = set()
+        for node in modified_nodes:
+            name = node["name"]
+            if name in seen_names:
+                continue
+            seen_names.add(name)
+            
+            results = trace_impact(graph, name)
+            if results:
+                # Format as markdown block
+                report += f"**Impact of `{name}`**:\n```text\n"
+                report += "\n".join(results) + "\n```\n\n"
+
+        report += "*Please ensure all impacted downstream rules have been re-tested before merging.*"
+
+    print(report)
+    if output_path:
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(report)
+        print(f"Report saved to '{output_path}'.", file=sys.stderr)
+
+    return 0
+
 def main() -> None:
     """Parse CLI arguments and dispatch to the appropriate sub-command."""
     parser = argparse.ArgumentParser(
@@ -225,6 +269,20 @@ def main() -> None:
         "--pipeline-dir",
         default=".",
         help="Path to the pipeline directory containing the built index (default: current directory).",
+    )
+
+    pr_report_parser = subparsers.add_parser(
+        "pr-report",
+        help="Generate a markdown report of downstream impacts for all git-modified files (useful for CI/CD).",
+    )
+    pr_report_parser.add_argument(
+        "--pipeline-dir",
+        default=".",
+        help="Path to the pipeline directory containing the built index (default: current directory).",
+    )
+    pr_report_parser.add_argument(
+        "--output",
+        help="Path to save the generated markdown report.",
     )
 
     analyze_parser = subparsers.add_parser(
@@ -274,6 +332,7 @@ def main() -> None:
         "analyze": _cmd_analyze,
         "impact": _cmd_impact,
         "export": _cmd_export,
+        "pr-report": _cmd_pr_report,
     }
     sys.exit(dispatch[args.command](args))
 
