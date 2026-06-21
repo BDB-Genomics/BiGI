@@ -49,12 +49,34 @@ We built a synthetic test pipeline to validate the tool:
 
 ---
 
+## Installation
+
+To install BiGI globally so you can run it from anywhere without needing the `python3 bigi-cli` prefix:
+
+```bash
+git clone https://github.com/BDB-Genomics/BiGI.git
+cd BiGI
+pip install -e .
+```
+Now you can use the `bigi` command globally!
+
+---
+
 ## CLI Usage & Verification Results
 
 ### 1. Indexing the Codebase (`analyze`)
-To analyze the directory and generate the index:
+You can analyze a local directory or **directly analyze a remote GitHub repository URL**. 
+
+When passing a remote GitHub URL, BiGI will automatically clone the repository into an isolated temporary folder, generate the requested output graph, and instantly delete the cloned code when finished.
+
+**Analyze a local folder:**
 ```bash
-python3 bigi-cli analyze test_pipeline --html test_pipeline/visualization.html
+bigi analyze test_pipeline --html test_pipeline/visualization.html
+```
+
+**Analyze a remote GitHub repository directly:**
+```bash
+bigi analyze https://github.com/BDB-Genomics/BiGI.git --html output.html
 ```
 *Output:*
 ```
@@ -64,7 +86,7 @@ Indexed 18 nodes and 26 edges.
 ### 2. Exporting to GraphML (`export`)
 If you want to perform custom network analysis (e.g., PageRank, Centrality) in tools like Gephi or Cytoscape, you can export the graph:
 ```bash
-python3 bigi-cli export my_graph.graphml --pipeline-dir test_pipeline
+bigi export my_graph.graphml --pipeline-dir test_pipeline
 ```
 *Output:*
 ```
@@ -76,7 +98,7 @@ GraphML exported to 'my_graph.graphml'.
 #### Test Case A: Happy Path (`clean_names`)
 Querying `clean_names` (which is defined in `preprocess.R` and called inside `plot.R`):
 ```bash
-python3 bigi-cli impact clean_names --pipeline-dir test_pipeline
+bigi impact clean_names --pipeline-dir test_pipeline
 ```
 *Output:*
 ```
@@ -92,7 +114,7 @@ Downstream Impact (what breaks if changed):
 #### Test Case B: Ambiguous Resolution (`log_transform`)
 Querying the conflicting function `log_transform` (defined in both `preprocess.R` and `normalize.R`):
 ```bash
-python3 bigi-cli impact log_transform --pipeline-dir test_pipeline
+bigi impact log_transform --pipeline-dir test_pipeline
 ```
 *Output:*
 ```
@@ -116,7 +138,7 @@ Downstream Impact (what breaks if changed):
 #### Test Case C: Rule Downstream + Touched Functions (`preprocess`)
 Querying the rule `preprocess`:
 ```bash
-python3 bigi-cli impact preprocess --pipeline-dir test_pipeline
+bigi impact preprocess --pipeline-dir test_pipeline
 ```
 *Output:*
 ```
@@ -139,17 +161,25 @@ R Functions Touched by Script (direct and transitive calls):
 
 #### Test Case D: Failure on Nonexistent Symbol
 ```bash
-python3 bigi-cli impact nonexistent_symbol --pipeline-dir test_pipeline
+bigi impact nonexistent_symbol --pipeline-dir test_pipeline
 ```
 *Output (exits with status 1):*
 ```
 Error: Symbol or rule 'nonexistent_symbol' not found in the index.
 ```
 
+### 4. CI/CD Automated Blast Radius Reporting (`pr-report`)
+BiGI features a `pr-report` command designed specifically for GitHub Actions. It automatically detects which rules and functions were modified in a Pull Request, calculates their downstream impact, and generates a formatted Markdown string. 
+
+When integrated into a CI/CD pipeline (see `.github/workflows/pr_blast_radius.yml`), BiGI will automatically post this report as a comment directly on the PR, warning reviewers of the exact blast radius of the code changes before merging!
+
 ---
 
 ## Recent Updates
 
+- **Remote GitHub URL Support**: You can now pass GitHub URLs directly into `--pipeline-dir`. BiGI will securely clone it into an isolated temporary folder, analyze it, and instantly delete the clone upon completion to keep your workspace pristine.
+- **CI/CD Blast Radius Bot**: Added the `pr-report` command and a GitHub Actions workflow to automatically comment on PRs with the downstream impact of code changes.
+- **Nextflow Support (`.nf`)**: Native parsing support for Nextflow pipelines is fully integrated alongside Snakemake.
 - **GraphML Export Capability**: Added `bigi export <file>.graphml` to generate standardized XML graph files for external network analysis.
 - **Premium Visualization Redesign**: Stripped away generic gradients and glassmorphism from the HTML export, replacing it with a sleek, minimalist hacker aesthetic (solid `#0a0a0a` backgrounds, sharp `#00e5ff`/`#ff00aa` neon accents, JetBrains Mono font).
 - **Physics Simulation Control Fix**: Corrected the WASM physics engine so the pause/resume simulation button now accurately halts the layout calculations.
