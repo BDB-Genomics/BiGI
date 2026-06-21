@@ -5,9 +5,18 @@ import subprocess
 
 app = Flask(__name__)
 
-@app.route('/<owner>/<repo>')
-def analyze_repo(owner, repo):
-    repo_url = f"https://github.com/{owner}/{repo}"
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def catch_all(path):
+    if not path:
+        return index()
+    parts = path.strip('/').split('/')
+    if len(parts) >= 2:
+        owner = parts[0]
+        repo = parts[1]
+        repo_url = f"https://github.com/{owner}/{repo}"
+    else:
+        return index()
     
     with tempfile.TemporaryDirectory() as tmpdir:
         html_out = os.path.join(tmpdir, "out.html")
