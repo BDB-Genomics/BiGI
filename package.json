@@ -1,6 +1,6 @@
 {
   "name": "bigi-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Blast-radius Impact Graph Indexer CLI wrapper for npx running",
   "bin": {
     "bigi": "./bin/bigi.js"

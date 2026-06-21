@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bigi"
-version = "1.0.0"
+version = "1.0.1"
 description = "BiGI: Blast-radius Impact Graph Indexer — Universal Software Pipeline Intelligence & Static Analysis."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -22,3 +22,6 @@ bigi = "bigi.cli:main"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["bigi*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.html", "*.R"]
