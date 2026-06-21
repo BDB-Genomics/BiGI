@@ -9,6 +9,10 @@ description = "BiGI: Blast-radius Impact Graph Indexer — Universal Software Pi
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
+dependencies = [
+    "networkx",
+    "flask",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
