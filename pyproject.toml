@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bigi"
-version = "0.1.0"
-description = "BiGI: BDB-Genomics Impact Graph — trace downstream impact across Snakemake pipelines and R code."
+version = "1.0.0"
+description = "BiGI: Blast-radius Impact Graph Indexer — Universal Software Pipeline Intelligence & Static Analysis."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
@@ -13,7 +13,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 [project.scripts]
