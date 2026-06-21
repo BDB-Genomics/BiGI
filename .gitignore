@@ -20,6 +20,12 @@ test_pipeline/plots/
 # HTML exports (generated artifacts)
 visualization.html
 **/visualization.html
+out.html
+test.html
+*.html
+
+# Graph exports
+*.graphml
 
 # IDE
 .idea/
