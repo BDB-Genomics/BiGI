@@ -22,7 +22,7 @@
 - 🤖 **AI Auto-Remediation**: Use the `bigi remediate` command to ask our AI to fix failing pipeline rules automatically based on the graph's blast radius.
 - 📡 **Live Execution Overlay**: Run `bigi monitor` while your pipeline runs. The graph nodes will glow yellow (running), blue (done), or red (failed) in real time!
 - 🗂️ **Data Contracts (Schemas)**: BiGI infers the data schemas passed between steps (like DataFrame columns). It warns you if a pipeline step expects a column that doesn't exist.
-- 🛠️ **Works With Everything**: We natively support **Snakemake**, **Nextflow**, **Python**, and **R**, with generic fallback support for **Bash**, **Rust**, **Go**, **C++**, and **JavaScript**.
+- 🛠️ **Works With Everything**: We natively support **Snakemake**, **Nextflow**, **Python**, and **R**. For everything else, our generic fallback parser can scan **any language** (Bash, Rust, Go, C++, JavaScript, etc.) to extract function calls and dependencies.
 - ⚡ **No Setup Needed**: The graph is a single interactive HTML file. No servers or databases required.
 
 ---
