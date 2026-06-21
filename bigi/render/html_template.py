@@ -2774,6 +2774,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                     baseColor = "#6366f1"; // RULE
                 } else if (n.type === "unresolved") {
                     baseColor = "#f43f5e"; // UNRES
+                } else if (n.type === "environment") {
+                    baseColor = "#14b8a6"; // ENV
                 }
                 
                 if (isPathActive) {

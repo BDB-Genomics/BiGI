@@ -51,6 +51,10 @@ def _save_section(rule: dict, section: str, content_lines: list[str]) -> None:
         paths = re.findall(r'["\']([^"\']+)["\']', content)
         rule["shell"] = paths[0] if paths else content
 
+    elif section in ("conda", "container"):
+        paths = re.findall(r'["\']([^"\']+)["\']', content)
+        rule[section] = paths[0] if paths else content
+
 
 def parse_snakemake_file(file_path: str, base_dir: str) -> dict[str, dict]:
     """Parse a single Snakemake file and return a mapping of rule name → rule dict.
@@ -100,6 +104,8 @@ def parse_snakemake_file(file_path: str, base_dir: str) -> dict[str, dict]:
                 "output": [],
                 "script": None,
                 "shell": None,
+                "conda": None,
+                "container": None,
                 "r_script": None,
             }
             rules[rule_name] = current_rule

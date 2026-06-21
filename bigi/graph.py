@@ -245,6 +245,21 @@ def build_graph(pipeline_dir: str) -> dict:
         _add_node(nodes, f"rule:{name}", type="rule", name=display_name,
                   file=r["file"], inputs=r["input"], outputs=r["output"])
 
+        # Add Environment dependencies (Conda/Container)
+        for env_key in ("conda", "container"):
+            if r.get(env_key):
+                env_val = r[env_key]
+                env_id = f"env:{env_val}"
+                _add_node(nodes, env_id, type="environment", name=os.path.basename(env_val), file=env_val)
+                edges.append({
+                    "source": env_id,
+                    "target": f"rule:{name}",
+                    "type": "env_dep",
+                    "confidence": "HIGH",
+                    "label": f"requires {env_key}",
+                    "detail": f"Rule '{name}' executes within {env_val}"
+                })
+
     for d in merged_definitions:
         code_content = ""
         full_file_path = os.path.join(pipeline_dir, d["file"])
