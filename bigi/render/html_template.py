@@ -508,13 +508,13 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             <h2 style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem; letter-spacing: -0.01em;">
                 <span style="font-size: 1.25rem;">🧬</span> BiGI Impact Graph
             </h2>
-            <div class="subtitle" style="font-size: 0.65rem; color: #6366f1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px;">Cross-Layer Genomic Index</div>
+            <div class="subtitle" style="font-size: 0.65rem; color: #6366f1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px;">Cross-Layer Index</div>
         </div>
 
         <div class="left-tabs">
             <div id="left-tab-btn-search" class="left-tab-btn active" style="--highlight-color: #818cf8;" onclick="switchLeftTab('search')">🔍 Search</div>
             <div id="left-tab-btn-git" class="left-tab-btn" style="--highlight-color: #fdba74; position: relative;" onclick="switchLeftTab('git')">
-                🍊 Git Risk
+                Git Risk
                 <span id="git-changes-badge" style="display: none; background: #f97316; color: white; font-size: 0.58rem; font-weight: bold; padding: 1px 5px; border-radius: 10px; margin-left: 4px; box-shadow: 0 0 5px rgba(249, 115, 22, 0.4);">0</span>
             </div>
         </div>
@@ -526,15 +526,15 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
             <div>
                 <div class="section-title">Modalities</div>
-                <div class="legend-item">
+                <div class="legend-item" style="cursor:help;" onclick="if(this.innerText.includes('Rule')) alert('Pipeline Rule: A task executed by the orchestrator.'); else if(this.innerText.includes('Function')) alert('Script Function: A logic block extracted from source code.'); else if(this.innerText.includes('Unresolved')) alert('Unresolved: External or dynamic dependency that cannot be statically traced.');">
                     <div class="legend-color color-rule"></div>
                     <span>Pipeline Rule</span>
                 </div>
-                <div class="legend-item">
+                <div class="legend-item" style="cursor:help;" onclick="if(this.innerText.includes('Rule')) alert('Pipeline Rule: A task executed by the orchestrator.'); else if(this.innerText.includes('Function')) alert('Script Function: A logic block extracted from source code.'); else if(this.innerText.includes('Unresolved')) alert('Unresolved: External or dynamic dependency that cannot be statically traced.');">
                     <div class="legend-color color-func"></div>
-                    <span>R Function Definition</span>
+                    <span>Script Function Definition</span>
                 </div>
-                <div class="legend-item">
+                <div class="legend-item" style="cursor:help;" onclick="if(this.innerText.includes('Rule')) alert('Pipeline Rule: A task executed by the orchestrator.'); else if(this.innerText.includes('Function')) alert('Script Function: A logic block extracted from source code.'); else if(this.innerText.includes('Unresolved')) alert('Unresolved: External or dynamic dependency that cannot be statically traced.');">
                     <div class="legend-color color-unres"></div>
                     <span>External / Unresolved</span>
                 </div>
@@ -542,7 +542,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
             <div>
                 <div class="section-title">Filters</div>
-                <div class="legend-item">
+                <div class="legend-item" style="cursor:help;" onclick="if(this.innerText.includes('Rule')) alert('Pipeline Rule: A task executed by the orchestrator.'); else if(this.innerText.includes('Function')) alert('Script Function: A logic block extracted from source code.'); else if(this.innerText.includes('Unresolved')) alert('Unresolved: External or dynamic dependency that cannot be statically traced.');">
                     <input type="checkbox" id="hide-unresolved-cb" checked style="margin-right: 8px; cursor: pointer;">
                     <label for="hide-unresolved-cb" style="cursor: pointer; font-size: 0.8rem; user-select: none;">Hide Unresolved Links</label>
                 </div>
@@ -552,7 +552,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 </div>
                 <div class="legend-item" id="git-filter-container" style="display: none; margin-top: 8px;">
                     <input type="checkbox" id="git-impact-cb" style="margin-right: 8px; cursor: pointer;">
-                    <label for="git-impact-cb" style="cursor: pointer; font-size: 0.8rem; user-select: none; color: #fdba74; display: flex; align-items: center; gap: 4px; font-weight: 500;">🍊 Git Changes Impact</label>
+                    <label for="git-impact-cb" style="cursor: pointer; font-size: 0.8rem; user-select: none; color: #fdba74; display: flex; align-items: center; gap: 4px; font-weight: 500;">Git Changes Impact</label>
                 </div>
             </div>
 
@@ -566,7 +566,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
         <div id="left-content-git" style="display: none;">
             <div id="git-dashboard-intro" style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 12px; padding: 8px; background: rgba(249, 115, 22, 0.05); border: 1px dashed rgba(249, 115, 22, 0.2); border-radius: 6px;">
-                [WARNING] No modified files detected in Git. Modify rules or functions in your repository to calculate downstream risk propagation.
+                No modified files detected in Git. Modify rules or functions in your repository to calculate downstream risk propagation.
             </div>
             
             <div id="git-dashboard-active" style="display: none;">
@@ -980,7 +980,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                             <span style="font-weight: 600; font-size: 0.72rem; color: #f3f4f6;">${n.name}</span>
                             <span style="font-size:0.55rem; text-transform:uppercase; padding: 1px 4px; border-radius: 4px; background: rgba(239, 68, 68, 0.2); color: #f87171; font-weight:700;">${n.type}</span>
                         </div>
-                        <div style="font-size:0.6rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">📁 ${n.file || "No file info"}</div>
+                        <div style="font-size:0.6rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${n.file || "No file info"}</div>
                     `;
                     item.onclick = () => window.selectNodeById(n.id);
                     entrypointList.appendChild(item);
@@ -1013,7 +1013,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                             <span style="font-weight: 600; font-size: 0.72rem; color: #e2e8f0;">${n.name}</span>
                             <span style="font-size:0.55rem; padding: 1px 4px; border-radius: 4px; background: ${badgeColor}; color: ${textColor}; font-weight:700;">${degreeText}</span>
                         </div>
-                        <div style="font-size:0.6rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">📁 ${n.file || "No file info"}</div>
+                        <div style="font-size:0.6rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${n.file || "No file info"}</div>
                     `;
                     item.onclick = () => window.selectNodeById(n.id);
                     impactedList.appendChild(item);
@@ -1124,8 +1124,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             navigator.clipboard.writeText(codeEl.textContent).then(() => {
                 const copyBtn = document.getElementById("mermaid-copy-btn");
                 if (copyBtn) {
-                    copyBtn.textContent = "[COPIED]";
-                    setTimeout(() => { copyBtn.textContent = "[COPY CODE]"; }, 2000);
+                    copyBtn.textContent = "Copied";
+                    setTimeout(() => { copyBtn.textContent = "Copy Code"; }, 2000);
                 }
             }).catch(err => {
                 console.error("Failed to copy text: ", err);
@@ -1236,7 +1236,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     <div class="header">
         <div>
             <h1>Flowchart: ${nodeName}</h1>
-            <div class="subtitle">Genomics impact graph generated by BiGI</div>
+            <div class="subtitle">Impact graph generated by BiGI</div>
         </div>
         <button class="btn" onclick="window.print()">[PRINT / PDF]</button>
     </div>
@@ -1437,7 +1437,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         const pauseBtn = document.getElementById("btn-pause");
         pauseBtn.onclick = () => {
             isSimulating = !isSimulating;
-            pauseBtn.textContent = isSimulating ? "Pause Physics" : "Resume Physics";
+            pauseBtn.textContent = isSimulating ? "Pause" : "Resume";
         };
 
         // Reset positions
@@ -1451,7 +1451,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             transform = { x: 0, y: 0, k: 1 };
             if (!isSimulating) {
                 isSimulating = true;
-                pauseBtn.textContent = "Pause Physics";
+                pauseBtn.textContent = "Pause";
             }
         };
 
@@ -1462,7 +1462,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             layoutBtn.textContent = layoutMode === 'swimlane' ? 'Layout: Swimlanes' : 'Layout: Free';
             if (!isSimulating) {
                 isSimulating = true;
-                pauseBtn.textContent = "Pause Physics";
+                pauseBtn.textContent = "Pause";
             }
         };
 
@@ -1743,7 +1743,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                             let connDesc = "";
                             if (i.type === "pipeline_dep") {
                                 connDesc = `Depends on outputs of rule <code>${i.node.name}</code> (matched via <code>${i.label}</code>)`;
-                            } else if (i.type === "r_call") {
+                            } else if (i.type === "script_call") {
                                 if (node.type === "rule") {
                                     connDesc = `Executed inside rule's script (calls function <code>${i.node.name}()</code>)`;
                                 } else {
@@ -1772,9 +1772,9 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                             let connDesc = "";
                             if (o.type === "pipeline_dep") {
                                 connDesc = `Feeds outputs into rule <code>${o.node.name}</code> (matched via <code>${o.label}</code>)`;
-                            } else if (o.type === "r_call") {
+                            } else if (o.type === "script_call") {
                                 if (o.node.type === "rule") {
-                                    connDesc = `Called inside script run by Snakemake rule <code>${o.node.name}</code> (<code>${o.node.file}</code>)`;
+                                    connDesc = `Called inside script run by Pipeline Rule <code>${o.node.name}</code> (<code>${o.node.file}</code>)`;
                                 } else {
                                     connDesc = `Called inside body of function <code>${o.node.name}()</code>`;
                                 }
@@ -2784,6 +2784,12 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                     } else if (pathTracingNodes.has(n.id)) {
                         baseColor = "#818cf8"; // Lavender path connection node
                     }
+
+                // Git Impact Coloring Override
+                if (hasGitChanges && n.id in gitRiskScores) {
+                    if (n.git_modified) { baseColor = "#ef4444"; } // Red for modified
+                    else { baseColor = "#f97316"; } // Orange for impacted
+                }
                 }
 
                 const w = n.width;
