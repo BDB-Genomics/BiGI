@@ -1,12 +1,32 @@
 {
-  "name": "bigi-cli",
+  "name": "bigigithub",
   "version": "1.0.1",
+  "private": true,
   "description": "Blast-radius Impact Graph Indexer CLI wrapper for npx running",
   "bin": {
     "bigi": "./bin/bigi.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "next": "16.2.9",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.9",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   },
   "keywords": [
     "impact-graph",
