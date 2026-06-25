@@ -4,7 +4,7 @@
 
 **Blast-radius Impact Graph Indexer**
 
-BiGI shows what breaks before you change the code.
+BiGI shows what breaks before you change the code in any codebase.
 
 [![CI](https://github.com/AtlasMindAI/bigi/actions/workflows/ci.yml/badge.svg)](https://github.com/AtlasMindAI/bigi/actions/workflows/ci.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -22,15 +22,15 @@ BiGI shows what breaks before you change the code.
 
 BiGI scans a repository, builds a dependency graph, and traces downstream impact across:
 
-- Snakemake and Nextflow pipelines
-- Python and R code
-- shell scripts and other source files
+- Python, R, and shell code
+- automation and workflow files
+- scripts, modules, and source files
 - local folders, GitHub URLs, or multiple repositories
 
 Use it to answer questions like:
 
-- What breaks if I change this function?
-- Which pipeline steps depend on this file?
+- What breaks if I change this function, file, or script?
+- Which nodes depend on this one?
 - Which files were modified in this repo?
 - How do I export the graph for review or tooling?
 
@@ -69,7 +69,7 @@ Open `graph.html` in a browser to inspect the graph.
 ### Trace impact
 
 ```bash
-bigi impact normalize_data --pipeline-dir my_pipeline/
+bigi impact my_function --pipeline-dir my_project/
 ```
 
 ### Export GraphML
@@ -97,7 +97,7 @@ BiGI can generate:
 - an interactive HTML graph
 - GraphML for Cytoscape, Gephi, or other graph tools
 - a markdown PR impact report
-- a live execution overlay for pipeline runs
+- a live execution overlay for jobs and runs
 
 ## GitHub Action
 
@@ -130,7 +130,7 @@ jobs:
 
 ## How it works
 
-1. Parse supported files and extract rules, functions, calls, and schema reads.
+1. Parse supported files and extract functions, calls, files, and schema reads.
 2. Build a directed graph of dependencies.
 3. Trace downstream impact from the item you changed.
 4. Render the result in a self-contained HTML view.
@@ -140,7 +140,7 @@ jobs:
 | Command | Description |
 |---|---|
 | `bigi analyze <dir\|url> [--html out.html]` | Build a graph and optionally export HTML |
-| `bigi impact <symbol> [--pipeline-dir .]` | Trace downstream impact for a rule or function |
+| `bigi impact <symbol> [--pipeline-dir .]` | Trace downstream impact for a rule, function, or file |
 | `bigi export <file.graphml>` | Export the saved index to GraphML |
 | `bigi pr-report [--pipeline-dir .] [--output report.md]` | Generate a markdown blast radius report |
 | `bigi remediate <symbol> --prompt "..."` | Ask Gemini for a code fix with impact context |
