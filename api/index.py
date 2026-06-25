@@ -10,6 +10,7 @@ import os
 import zipfile
 import urllib.request
 import traceback
+from urllib.error import HTTPError
 
 from bigi.graph import build_graph
 from bigi.cli import export_html
@@ -33,11 +34,25 @@ def catch_all(path):
     with tempfile.TemporaryDirectory() as tmpdir:
         try:
             # Download repo as zip archive (no git binary required)
-            zip_url = f"https://github.com/{owner}/{repo}/archive/refs/heads/main.zip"
             zip_path = os.path.join(tmpdir, "repo.zip")
             extract_dir = os.path.join(tmpdir, "repo")
 
-            urllib.request.urlretrieve(zip_url, zip_path)
+            zip_url_candidates = [
+                f"https://github.com/{owner}/{repo}/archive/refs/heads/main.zip",
+                f"https://github.com/{owner}/{repo}/archive/refs/heads/master.zip",
+            ]
+            last_error = None
+            for zip_url in zip_url_candidates:
+                try:
+                    urllib.request.urlretrieve(zip_url, zip_path)
+                    last_error = None
+                    break
+                except HTTPError as exc:
+                    last_error = exc
+                    if exc.code != 404:
+                        raise
+            if last_error is not None:
+                raise last_error
 
             with zipfile.ZipFile(zip_path, 'r') as zf:
                 zf.extractall(extract_dir)
@@ -63,7 +78,7 @@ def catch_all(path):
 
             return Response(html_content, mimetype='text/html')
 
-        except urllib.error.HTTPError as e:
+        except HTTPError as e:
             if e.code == 404:
                 err_html = f"""
                 <html><body style="font-family:sans-serif;padding:2rem;background:#0a0a0f;color:white;">

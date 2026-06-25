@@ -457,7 +457,6 @@ def main() -> None:
         help="HTTP server port.",
     )
 
-    args_list = sys.argv[1:]
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)

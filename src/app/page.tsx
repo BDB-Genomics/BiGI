@@ -2,84 +2,159 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+const highlights = [
+  "Snakemake",
+  "Nextflow",
+  "Python",
+  "R",
+  "Shell",
+];
+
+function normalizeRepoInput(raw: string): string | null {
+  const value = raw.trim().replace(/^https?:\/\//, "");
+
+  if (!value) {
+    return null;
+  }
+
+  if (value.includes("github.com/")) {
+    const afterHost = value.split("github.com/")[1];
+    const [owner, repo] = afterHost.split("/");
+    if (owner && repo) {
+      return `${owner}/${repo.replace(/\.git$/, "")}`;
+    }
+  }
+
+  if (value.includes("/")) {
+    const [owner, repo] = value.split("/");
+    if (owner && repo) {
+      return `${owner}/${repo.replace(/\.git$/, "")}`;
+    }
+  }
+
+  return null;
+}
+
 export default function Home() {
   const [repoUrl, setRepoUrl] = useState('');
   const router = useRouter();
 
   const handleAnalyze = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!repoUrl) return;
 
-    // Extract owner and repo from URL
-    // e.g. https://github.com/BDB-Genomics/BiGI -> owner=BDB-Genomics, repo=BiGI
-    let url = repoUrl.trim();
-    if (url.includes('github.com')) {
-      const parts = url.split('github.com/')[1].split('/');
-      if (parts.length >= 2) {
-        router.push(`/${parts[0]}/${parts[1]}`);
-        return;
-      }
+    const normalized = normalizeRepoInput(repoUrl);
+    if (!normalized) {
+      window.alert("Enter a GitHub URL or an owner/repo pair.");
+      return;
     }
-    
-    // Fallback: assume the user just typed "owner/repo"
-    if (url.includes('/')) {
-      router.push(`/${url}`);
-    } else {
-      alert("Please enter a valid GitHub URL or owner/repo format.");
-    }
+
+    router.push(`/${normalized}`);
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center p-8 relative overflow-hidden">
-      {/* Abstract Background Gradients */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/30 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-emerald-600/20 blur-[120px] rounded-full pointer-events-none" />
+    <main className="relative min-h-screen overflow-hidden px-6 py-10 sm:px-8">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute left-[-12%] top-[-18%] h-[28rem] w-[28rem] rounded-full bg-sky-400/18 blur-3xl" />
+        <div className="absolute right-[-10%] top-[12%] h-[24rem] w-[24rem] rounded-full bg-violet-500/18 blur-3xl" />
+        <div className="absolute bottom-[-18%] left-[20%] h-[20rem] w-[20rem] rounded-full bg-cyan-300/12 blur-3xl" />
+      </div>
 
-      <div className="z-10 flex flex-col items-center text-center max-w-3xl">
-        <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-emerald-400 drop-shadow-sm">
-          BiGIGitHub
-        </h1>
-        <p className="text-xl md:text-2xl text-gray-400 font-light mb-12 max-w-2xl leading-relaxed">
-          Instantly generate interactive dependency graphs for any pipeline repository. <br/>
-          Just prefix any GitHub URL with <strong className="text-white bg-white/10 px-2 py-1 rounded">bigi</strong>.
-        </p>
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-5rem)] max-w-6xl flex-col justify-center gap-14">
+        <header className="max-w-3xl">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+            <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(125,211,252,0.8)]" />
+            Blast-radius analysis for pipeline repositories
+          </div>
 
-        <form onSubmit={handleAnalyze} className="w-full relative group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
-          <div className="relative flex items-center bg-[#13131a] rounded-2xl p-2 shadow-2xl border border-white/10 ring-1 ring-black/5">
-            <span className="pl-4 pr-2 text-gray-500 font-medium select-none hidden sm:block">
-              bigigithub.com/
-            </span>
-            <input
-              type="text"
-              placeholder="BDB-Genomics/BiGI"
-              value={repoUrl}
-              onChange={(e) => setRepoUrl(e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-white px-2 py-4 text-lg font-mono placeholder-gray-600 focus:ring-0"
-            />
-            <button
-              type="submit"
-              className="ml-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-semibold py-4 px-8 rounded-xl shadow-lg transform transition hover:scale-105 active:scale-95"
-            >
-              Analyze
-            </button>
-          </div>
-        </form>
+          <h1 className="max-w-3xl text-5xl font-semibold tracking-tight text-white sm:text-7xl">
+            See the downstream impact before you change the code.
+          </h1>
 
-        <div className="mt-16 flex gap-6 text-sm text-gray-500 font-medium">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            No Setup Required
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl">
+            BiGI builds dependency graphs across Snakemake, Nextflow, Python, R, and shell scripts so
+            you can understand what a change touches before it ships.
+          </p>
+        </header>
+
+        <section className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+          <form
+            onSubmit={handleAnalyze}
+            className="relative overflow-hidden rounded-3xl border border-[var(--surface-border)] bg-[var(--surface)] p-4 shadow-[0_24px_80px_rgba(2,6,23,0.6)] backdrop-blur-xl"
+          >
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/60 to-transparent" />
+            <label className="mb-3 block text-sm font-medium text-slate-300">
+              Analyze a repository
+            </label>
+
+            <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-950/60 p-3 sm:flex-row sm:items-center">
+              <span className="hidden select-none rounded-xl border border-white/10 bg-white/5 px-3 py-3 font-mono text-sm text-slate-400 sm:inline">
+                github.com/
+              </span>
+
+              <input
+                type="text"
+                placeholder="BDB-Genomics/BiGI"
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                className="min-w-0 flex-1 rounded-xl border border-transparent bg-transparent px-3 py-3 font-mono text-base text-white outline-none placeholder:text-slate-500 focus:border-cyan-300/30 focus:bg-white/5"
+              />
+
+              <button
+                type="submit"
+                className="rounded-xl bg-gradient-to-r from-sky-400 to-violet-500 px-5 py-3 font-semibold text-slate-950 shadow-[0_12px_40px_rgba(125,211,252,0.28)] transition hover:brightness-110 active:scale-[0.98]"
+              >
+                Analyze
+              </button>
+            </div>
+
+            <p className="mt-3 text-sm leading-6 text-slate-400">
+              Accepts full GitHub URLs or `owner/repo` notation. Public repos are analyzed directly from source.
+            </p>
+          </form>
+
+          <aside className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-slate-300 backdrop-blur-xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+              Supported layers
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {highlights.map((item) => (
+                <span
+                  key={item}
+                  className="rounded-full border border-white/10 bg-slate-950/60 px-3 py-1.5 text-sm text-slate-200"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-6 space-y-4 text-slate-400">
+              <p>
+                Generate an interactive HTML graph, inspect the blast radius of a function or rule,
+                or export the index for downstream tools.
+              </p>
+              <p>
+                The local CLI and the web entrypoint share the same graph-building logic, so the same
+                repository can be analyzed from the terminal or the browser.
+              </p>
+            </div>
+          </aside>
+
+          <div className="grid gap-4 sm:grid-cols-3 lg:col-span-2">
+            {[
+              ["No setup", "Run against a local directory or a public GitHub repo."],
+              ["Impact first", "Trace downstream rules, scripts, and schema reads."],
+              ["Exportable", "Generate HTML or GraphML for review and tooling."],
+            ].map(([title, body]) => (
+              <div
+                key={title}
+                className="rounded-2xl border border-white/10 bg-slate-950/50 p-5 shadow-[0_10px_30px_rgba(2,6,23,0.28)]"
+              >
+                <div className="text-base font-semibold text-white">{title}</div>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{body}</p>
+              </div>
+            ))}
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse delay-75" />
-            Snakemake & Nextflow
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse delay-150" />
-            Cross-Layer Analysis
-          </div>
-        </div>
+        </section>
       </div>
     </main>
   );

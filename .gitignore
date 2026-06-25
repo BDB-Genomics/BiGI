@@ -28,6 +28,12 @@ test.html
 # Graph exports
 *.graphml
 
+# Build outputs
+.next/
+coverage/
+*.tsbuildinfo
+physics_wasm/target/
+
 # IDE
 .idea/
 .vscode/
