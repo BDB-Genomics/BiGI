@@ -5,17 +5,38 @@ and runs BiGI analysis using Python imports directly.
 """
 
 from flask import Flask, Response
+import json
 import tempfile
 import os
 import zipfile
 import urllib.request
 import traceback
 from urllib.error import HTTPError
+from typing import Optional
 
 from bigi.graph import build_graph
 from bigi.cli import export_html
 
 app = Flask(__name__)
+
+
+def resolve_default_branch(owner: str, repo: str) -> Optional[str]:
+    """Return the repository default branch, or ``None`` if it cannot be resolved."""
+    api_url = f"https://api.github.com/repos/{owner}/{repo}"
+    request = urllib.request.Request(
+        api_url,
+        headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "BiGI",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+            default_branch = payload.get("default_branch")
+            return default_branch if isinstance(default_branch, str) and default_branch else None
+    except Exception:
+        return None
 
 
 @app.route('/', defaults={'path': ''})
@@ -37,12 +58,18 @@ def catch_all(path):
             zip_path = os.path.join(tmpdir, "repo.zip")
             extract_dir = os.path.join(tmpdir, "repo")
 
+            default_branch = resolve_default_branch(owner, repo)
             zip_url_candidates = [
+                f"https://github.com/{owner}/{repo}/archive/refs/heads/{default_branch}.zip"
+                if default_branch
+                else None,
                 f"https://github.com/{owner}/{repo}/archive/refs/heads/main.zip",
                 f"https://github.com/{owner}/{repo}/archive/refs/heads/master.zip",
             ]
             last_error = None
             for zip_url in zip_url_candidates:
+                if not zip_url:
+                    continue
                 try:
                     urllib.request.urlretrieve(zip_url, zip_path)
                     last_error = None
@@ -84,7 +111,7 @@ def catch_all(path):
                 <html><body style="font-family:sans-serif;padding:2rem;background:#0a0a0f;color:white;">
                   <h1 style="color:#f87171;">Repository not found</h1>
                   <p>Could not find <strong>github.com/{owner}/{repo}</strong>.</p>
-                  <p style="color:#9ca3af;">Make sure the repository exists, is public, and has a <code>main</code> branch.</p>
+                  <p style="color:#9ca3af;">Make sure the repository exists, is public, and has a reachable default branch.</p>
                   <a href="/" style="color:#818cf8;">← Back to home</a>
                 </body></html>
                 """
@@ -115,9 +142,9 @@ def landing_page():
     <html>
       <body style="background:#0a0a0f;color:white;font-family:sans-serif;text-align:center;padding-top:20vh;">
         <h1 style="font-size:4rem;background:-webkit-linear-gradient(#818cf8, #34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">BiGI</h1>
-        <p style="font-size:1.5rem;color:#9ca3af;">Instantly visualize any GitHub repository's dependency graph.</p>
+        <p style="font-size:1.5rem;color:#9ca3af;">Instantly visualize downstream impact in any GitHub codebase.</p>
         <p style="color:#6b7280;margin-top:2rem;">Add <code style="background:#1a1a2e;padding:4px 8px;border-radius:4px;">/owner/repo</code> to the URL to get started.</p>
-        <p style="color:#4b5563;margin-top:1rem;">Example: <code style="background:#1a1a2e;padding:4px 8px;border-radius:4px;">/BDB-Genomics/bigi</code></p>
+        <p style="color:#4b5563;margin-top:1rem;">Example: <code style="background:#1a1a2e;padding:4px 8px;border-radius:4px;">/AtlasMindAI/bigi</code></p>
       </body>
     </html>
     """, mimetype='text/html')

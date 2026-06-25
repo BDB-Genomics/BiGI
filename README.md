@@ -173,7 +173,7 @@ pytest tests/ -v
 
 ## Vercel
 
-BiGI can also run as a web app. Visit your deployment and append `owner/repo`:
+BiGI can also run as a web app for any public GitHub codebase. Visit your deployment and append `owner/repo`:
 
 ```text
 https://your-bigi-app.vercel.app/AtlasMindAI/bigi

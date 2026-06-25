@@ -3,8 +3,8 @@
 Entry point: ``bigi`` (installed via ``console_scripts`` in pyproject.toml).
 
 Sub-commands:
-- ``analyze <pipeline_dir>`` — index a pipeline directory.
-- ``impact <symbol>``        — trace downstream impact of a rule or R function.
+- ``analyze <path>`` — index a codebase.
+- ``impact <symbol>`` — trace downstream impact of a symbol or file.
 """
 
 import copy
@@ -74,7 +74,7 @@ def export_graphml(graph_data: dict, output_path: str) -> None:
 
 
 def _fetch_pipeline_dir(pdir: str, temp_dirs: list) -> str:
-    """Clones a URL into a temporary directory if needed."""
+    """Clone a URL into a temporary directory if needed."""
     is_url = pdir.startswith(("http://", "https://", "git@", "git://"))
     if not is_url:
         if not os.path.exists(pdir):
@@ -352,8 +352,8 @@ def main() -> None:
     """Parse CLI arguments and dispatch to the appropriate sub-command."""
     parser = argparse.ArgumentParser(
         description=(
-            "BiGI: BDB-Genomics Impact Graph — trace downstream impact across "
-            "Snakemake pipelines and R code."
+            "BiGI: Blast-radius Impact Graph Indexer — trace downstream impact "
+            "across any codebase."
         )
     )
     subparsers = parser.add_subparsers(dest="command", help="Sub-command to run")
@@ -388,12 +388,12 @@ def main() -> None:
 
     analyze_parser = subparsers.add_parser(
         "analyze",
-        help="Index the pipeline directory and build the combined graph.",
+        help="Index a codebase and build the combined graph.",
     )
     analyze_parser.add_argument(
         "pipeline_dir",
         nargs='+',
-        help="Path(s) to the pipeline directories or git URLs to analyze. Pass multiple inputs to generate an Org-Wide Meta-Graph.",
+        help="Path(s) to codebases or git URLs to analyze. Pass multiple inputs to generate a combined graph.",
     )
     analyze_parser.add_argument(
         "--html",
@@ -402,11 +402,11 @@ def main() -> None:
 
     impact_parser = subparsers.add_parser(
         "impact",
-        help="Trace the downstream impact of changing a rule or R function.",
+        help="Trace the downstream impact of a symbol or file.",
     )
     impact_parser.add_argument(
         "symbol_or_rule_name",
-        help="Name of the Snakemake rule or R function to query.",
+        help="Name of the symbol, rule, or file to query.",
     )
     impact_parser.add_argument(
         "--pipeline-dir",
