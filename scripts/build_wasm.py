@@ -1,61 +1,55 @@
+import os
 import subprocess
 import base64
-import os
 import re
 
-def build_and_embed():
-    # 1. Compile Rust to Wasm
-    print("Compiling Rust physics library to WebAssembly...")
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    wasm_dir = os.path.join(base_dir, "physics_wasm")
-    result = subprocess.run(
+def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    physics_wasm_dir = os.path.join(project_root, "physics_wasm")
+    template_path = os.path.join(project_root, "bigi", "render", "template.html")
+
+    print("Step 1: Compiling Rust code to WebAssembly...")
+    subprocess.run(
         ["cargo", "build", "--target", "wasm32-unknown-unknown", "--release"],
-        cwd=wasm_dir,
-        capture_output=True,
-        text=True
+        cwd=physics_wasm_dir,
+        check=True
     )
-    if result.returncode != 0:
-        print("Error compiling Rust project:")
-        print(result.stderr)
-        return False
-    
-    # 2. Read Wasm file
-    wasm_path = os.path.join(wasm_dir, "target", "wasm32-unknown-unknown", "release", "physics_wasm.wasm")
-    if not os.path.exists(wasm_path):
-        print(f"Error: Wasm file not found at {wasm_path}")
-        return False
-        
-    with open(wasm_path, "rb") as f:
+
+    wasm_file = os.path.join(
+        physics_wasm_dir,
+        "target",
+        "wasm32-unknown-unknown",
+        "release",
+        "physics_wasm.wasm"
+    )
+
+    if not os.path.exists(wasm_file):
+        raise FileNotFoundError(f"Compiled WASM not found at {wasm_file}")
+
+    print("Step 2: Base64 encoding the WASM binary...")
+    with open(wasm_file, "rb") as f:
         wasm_bytes = f.read()
-        
     wasm_base64 = base64.b64encode(wasm_bytes).decode("utf-8")
-    print(f"Compiled WebAssembly size: {len(wasm_bytes) / 1024:.2f} KB")
-    print(f"Base64 string size: {len(wasm_base64) / 1024:.2f} KB")
-    
-    # 3. Update bigi/render/template.html
-    template_path = os.path.join(base_dir, "..", "bigi", "render", "template.html")
-    if not os.path.exists(template_path):
-        print(f"Error: Template file not found at {template_path}")
-        return False
-        
+
+    print(f"WASM size: {len(wasm_bytes)} bytes (Base64 length: {len(wasm_base64)} chars)")
+
+    print("Step 3: Replacing WASM_BASE64 in template.html...")
     with open(template_path, "r", encoding="utf-8") as f:
-        content = f.read()
-        
-    # Search for the WASM_BASE64 placeholder line
-    pattern = r'const WASM_BASE64 = ".*?"; // __WASM_BASE64__'
-    replacement = f'const WASM_BASE64 = "{wasm_base64}"; // __WASM_BASE64__'
+        template_content = f.read()
+
+    pattern = r'(const\s+WASM_BASE64\s*=\s*")[^"]*(";\s*//\s*__WASM_BASE64__)'
     
-    if not re.search(pattern, content):
-        print("Error: Could not find WASM_BASE64 placeholder in bigi/render/template.html")
-        return False
-        
-    new_content = re.sub(pattern, replacement, content)
-    
+    # Check if we can find the pattern first
+    if not re.search(pattern, template_content):
+        raise RuntimeError("Could not find WASM_BASE64 target pattern in template.html")
+
+    new_content = re.sub(pattern, rf'\g<1>{wasm_base64}\g<2>', template_content)
+
     with open(template_path, "w", encoding="utf-8") as f:
         f.write(new_content)
-        
-    print("Successfully compiled and embedded WebAssembly into bigi/render/template.html!")
-    return True
+
+    print("WASM successfully updated in template.html!")
 
 if __name__ == "__main__":
-    build_and_embed()
+    main()

@@ -18,6 +18,32 @@ static mut LINK_ACTIVE_PTR: *mut u8 = std::ptr::null_mut();
 static mut NUM_NODES: usize = 0;
 static mut NUM_LINKS: usize = 0;
 
+static mut SPRING_REST_LENGTH: f32 = 140.0;
+static mut SPRING_K: f32 = 0.07;
+static mut REPULSION_STRENGTH: f32 = 950.0;
+static mut DAMPING: f32 = 0.72;
+static mut MAX_SPEED: f32 = 30.0;
+static mut GRAVITY: f32 = 0.001;
+
+#[no_mangle]
+pub extern "C" fn set_physics_params(
+    spring_rest_length: f32,
+    spring_k: f32,
+    repulsion_strength: f32,
+    damping: f32,
+    max_speed: f32,
+    gravity: f32,
+) {
+    unsafe {
+        SPRING_REST_LENGTH = spring_rest_length;
+        SPRING_K = spring_k;
+        REPULSION_STRENGTH = repulsion_strength;
+        DAMPING = damping;
+        MAX_SPEED = max_speed;
+        GRAVITY = gravity;
+    }
+}
+
 // Allocation helpers
 #[no_mangle]
 pub extern "C" fn alloc_nodes(num_nodes: usize) {
@@ -209,8 +235,8 @@ pub extern "C" fn step_simulation(layout_mode: i32, width: f32, height: f32) {
                 let mut dist = (dx*dx + dy*dy).sqrt();
                 if dist < 1.0 { dist = 1.0; }
 
-                let rest_length = 140.0;
-                let k_coef = 0.07;
+                let rest_length = unsafe { SPRING_REST_LENGTH };
+                let k_coef = unsafe { SPRING_K };
                 let force = (dist - rest_length) * k_coef;
 
                 let fx = (dx / dist) * force;
@@ -233,7 +259,7 @@ pub extern "C" fn step_simulation(layout_mode: i32, width: f32, height: f32) {
         // 5. Center Gravity, Position Update & Velocity Capping
         let center_x = width / 2.0;
         let center_y = height / 2.0;
-        let max_speed = 30.0;
+        let max_speed = unsafe { MAX_SPEED };
 
         for i in 0..NUM_NODES {
             if active[i] == 0 || w[i] < 1.0 { continue; }
@@ -241,8 +267,8 @@ pub extern "C" fn step_simulation(layout_mode: i32, width: f32, height: f32) {
             // Pull to center gravity
             let dx = center_x - x[i];
             let dy = center_y - y[i];
-            vx[i] += dx * 0.001;
-            vy[i] += dy * 0.001;
+            vx[i] += dx * unsafe { GRAVITY };
+            vy[i] += dy * unsafe { GRAVITY };
 
             // Velocity capping
             let speed = (vx[i]*vx[i] + vy[i]*vy[i]).sqrt();
@@ -252,8 +278,8 @@ pub extern "C" fn step_simulation(layout_mode: i32, width: f32, height: f32) {
             }
 
             // Apply friction/damping
-            vx[i] *= 0.72;
-            vy[i] *= 0.72;
+            vx[i] *= unsafe { DAMPING };
+            vy[i] *= unsafe { DAMPING };
 
             // Position update
             x[i] += vx[i];
@@ -280,7 +306,7 @@ fn compute_repulsion(
     let mut dist = dist_sq.sqrt();
     if dist < 1.0 { dist = 1.0; }
 
-    let strength = 950.0;
+    let strength = unsafe { REPULSION_STRENGTH };
     let mut force = strength / dist_sq;
     if dist < 55.0 {
         force += (55.0 - dist) * 0.85;
@@ -310,16 +336,15 @@ fn compute_repulsion(
     let overlap_y = min_dist_y - dy.abs();
 
     if overlap_x > 0.0 && overlap_y > 0.0 {
-        if overlap_x < overlap_y {
-            let sign = if dx > 0.0 { 1.0 } else { -1.0 };
-            let push_force = overlap_x * 0.12 * sign;
-            vx[i] -= push_force;
-            vx[j] += push_force;
-        } else {
-            let sign = if dy > 0.0 { 1.0 } else { -1.0 };
-            let push_force = overlap_y * 0.12 * sign;
-            vy[i] -= push_force;
-            vy[j] += push_force;
-        }
+        let sign_x = if dx > 0.0 { 1.0 } else { -1.0 };
+        let sign_y = if dy > 0.0 { 1.0 } else { -1.0 };
+        
+        let push_x = overlap_x * 0.25 * sign_x;
+        let push_y = overlap_y * 0.25 * sign_y;
+        
+        vx[i] -= push_x;
+        vy[i] -= push_y;
+        vx[j] += push_x;
+        vy[j] += push_y;
     }
 }

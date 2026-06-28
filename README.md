@@ -22,7 +22,7 @@ BiGI shows what breaks before you change the code. Hosted at [AtlasMindAI/bigi](
 
 BiGI scans a repository and shows what changes affect downstream code.
 
-- Works on any codebase
+- Works on any codebase (universal language fallback and text/binary auto-detection)
 - Finds functions, files, scripts, rules, and links between them
 - Traces downstream impact from a change
 - Shows modified files inside the graph
@@ -31,6 +31,10 @@ BiGI scans a repository and shows what changes affect downstream code.
 - Limits focus to 1, 2, 3, or all hops
 - Exports HTML, GraphML, and PR reports
 - Adds a command palette for fast access
+- **Interactive Force Controls**: Adjust gravity, repulsion strength, damping, and spring lengths in real-time
+- **Code Viewer**: Prism.js Tomorrow-themed source code viewer embedded directly inside the details panel
+- **Label-Collision Mitigation**: WebAssembly physics engine resolves overlap forces on both axes to prevent clustered label overlaps
+- **Floating Modality Legend**: Dynamic color-coded legend overlay mapped to node types
 - Supports webcam hand control for pan, zoom, pause, and node selection
 
 ## Setup
