@@ -124,32 +124,44 @@ BiGI can generate:
 
 ## GitHub Action
 
-BiGI can comment on pull requests with the downstream impact of changed files.
+BiGI can run automatically on pull requests to analyze change propagation and post an impact/blast-radius report directly as a PR comment.
+
+### Basic Workflow Configuration
+
+Create a file named `.github/workflows/bigi.yml` in your repository:
 
 ```yaml
-name: BiGI Blast Radius
+name: BiGI Blast Radius Analysis
+
 on:
   pull_request:
-    branches: [main, master]
+    types: [opened, synchronize, reopened]
 
+# Permissions required to post PR comments
 permissions:
   pull-requests: write
   contents: read
 
 jobs:
-  blast-radius:
+  analyze-impact:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Run BiGI Blast Radius
+        uses: AtlasMindAI/bigi@main
         with:
-          fetch-depth: 0
-
-      - uses: AtlasMindAI/bigi@main
-        with:
-          pipeline-dir: '.'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          pipeline-dir: '.' # Directory to scan (default is repo root)
+          python-version: '3.11' # Python version to run (default is 3.11)
 ```
+
+### Action Configuration Inputs
+
+| Input | Description | Required | Default |
+|---|---|---|---|
+| `pipeline-dir` | The directory to scan for pipeline and source files (relative to repository root). | No | `.` |
+| `python-version` | Python version to run for building the dependency graph. | No | `3.11` |
+
+> [!IMPORTANT]
+> The composite action automatically checks out the repository with `fetch-depth: 0` to properly parse git history and detect modified files. You do not need to call `actions/checkout` manually in your job steps.
 
 ## How it works
 
