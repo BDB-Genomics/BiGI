@@ -319,7 +319,7 @@ def parse_generic_file(file_path: str, base_dir: str) -> dict:
     return {"definitions": definitions, "calls": calls}
 
 
-def parse_generic_directory(directory_path: str) -> dict:
+def parse_generic_directory(directory_path: str, gitignore=None) -> dict:
     """Recursively parse all code files of supported generic languages in directory_path."""
     directory_path = os.path.abspath(directory_path)
     all_defs = []
@@ -328,7 +328,12 @@ def parse_generic_directory(directory_path: str) -> dict:
     exclude_dirs = {"data", "results", "output", "out", "envs", "conda", "venv", "node_modules", "build", "dist", "logs", "benchmarks", "assets"}
     
     for root, dirs, files in os.walk(directory_path):
-        dirs[:] = [d for d in dirs if not d.startswith(".") and d.lower() not in exclude_dirs]
+        dirs[:] = [
+            d for d in dirs
+            if not d.startswith(".")
+            and d.lower() not in exclude_dirs
+            and (gitignore is None or not gitignore.is_ignored(os.path.join(root, d), is_dir=True))
+        ]
         
         for f in files:
             # Skip python/R since they are parsed by higher precision specialized parsers
@@ -336,8 +341,9 @@ def parse_generic_directory(directory_path: str) -> dict:
                 continue
                 
             file_path = os.path.join(root, f)
-            res = parse_generic_file(file_path, directory_path)
-            all_defs.extend(res["definitions"])
-            all_calls.extend(res["calls"])
+            if gitignore is None or not gitignore.is_ignored(file_path, is_dir=False):
+                res = parse_generic_file(file_path, directory_path)
+                all_defs.extend(res["definitions"])
+                all_calls.extend(res["calls"])
             
     return {"definitions": all_defs, "calls": all_calls}

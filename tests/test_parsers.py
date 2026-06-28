@@ -103,3 +103,82 @@ def test_r_parser():
     finally:
         if os.path.exists(temp_r_file):
             os.remove(temp_r_file)
+
+
+def test_gitignore_matching():
+    """Test that GitIgnore helper parses and matches paths correctly."""
+    from bigi.gitignore import GitIgnore
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create a .gitignore file
+        gitignore_path = os.path.join(tmpdir, ".gitignore")
+        with open(gitignore_path, "w", encoding="utf-8") as f:
+            f.write("\n".join([
+                "*.log",
+                "node_modules/",
+                "build/",
+                "temp-dir",
+                "!important.log",
+                "/relative-only",
+                "nested/**/docs",
+            ]))
+            
+        gitignore = GitIgnore(tmpdir)
+        
+        # Test basic wildcards
+        assert gitignore.is_ignored(os.path.join(tmpdir, "test.log")) is True
+        assert gitignore.is_ignored(os.path.join(tmpdir, "important.log")) is False
+        assert gitignore.is_ignored(os.path.join(tmpdir, "subdir", "test.log")) is True
+        
+        # Test directory only rules
+        assert gitignore.is_ignored(os.path.join(tmpdir, "node_modules"), is_dir=True) is True
+        assert gitignore.is_ignored(os.path.join(tmpdir, "node_modules"), is_dir=False) is False
+        assert gitignore.is_ignored(os.path.join(tmpdir, "node_modules", "foo.js"), is_dir=False) is True
+        
+        # Test basic relative checks
+        assert gitignore.is_ignored(os.path.join(tmpdir, "relative-only"), is_dir=False) is True
+        assert gitignore.is_ignored(os.path.join(tmpdir, "subdir", "relative-only"), is_dir=False) is False
+        
+        # Test double star matching
+        assert gitignore.is_ignored(os.path.join(tmpdir, "nested", "docs"), is_dir=True) is True
+        assert gitignore.is_ignored(os.path.join(tmpdir, "nested", "foo", "docs"), is_dir=True) is True
+        assert gitignore.is_ignored(os.path.join(tmpdir, "nested", "foo", "bar", "docs"), is_dir=True) is True
+        assert gitignore.is_ignored(os.path.join(tmpdir, "docs"), is_dir=True) is False
+
+
+def test_parser_respects_gitignore():
+    """Test that build_graph and parsers respect .gitignore rules during analysis."""
+    from bigi.graph import build_graph
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create files
+        os.makedirs(os.path.join(tmpdir, "ignored_dir"))
+        os.makedirs(os.path.join(tmpdir, "active_dir"))
+        
+        # 1. Ignored directory file
+        with open(os.path.join(tmpdir, "ignored_dir", "func1.py"), "w", encoding="utf-8") as f:
+            f.write("def ignored_function():\n    pass\n")
+            
+        # 2. Ignored file extension
+        with open(os.path.join(tmpdir, "active_dir", "temp.log"), "w", encoding="utf-8") as f:
+            f.write("Some log entries\n")
+            
+        # 3. Active file
+        with open(os.path.join(tmpdir, "active_dir", "main.py"), "w", encoding="utf-8") as f:
+            f.write("def active_function():\n    pass\n")
+            
+        # 4. Create .gitignore
+        with open(os.path.join(tmpdir, ".gitignore"), "w", encoding="utf-8") as f:
+            f.write("ignored_dir/\n*.log\n")
+            
+        # Build the graph
+        graph = build_graph(tmpdir)
+        
+        # Nodes should only contain active_function and NOT ignored_function
+        node_names = []
+        for node_id, node in graph.get("nodes", {}).items():
+            if node.get("type") == "function":
+                node_names.append(node.get("name"))
+                
+        assert "active_function" in node_names
+        assert "ignored_function" not in node_names

@@ -100,14 +100,22 @@ def parse_nextflow_file(file_path: str, base_dir: str) -> dict:
         
     return processes
 
-def parse_nextflow_pipeline(directory_path: str) -> dict:
+def parse_nextflow_pipeline(directory_path: str, gitignore=None) -> dict:
     """Scan directory recursively for Nextflow .nf files and parse processes."""
     directory_path = os.path.abspath(directory_path)
     rules = {}
-    for root, _, files in os.walk(directory_path):
+    exclude_dirs = {"data", "results", "output", "out", "envs", "conda", "venv", "node_modules", "build", "dist", "logs", "benchmarks", "assets"}
+    for root, dirs, files in os.walk(directory_path):
+        dirs[:] = [
+            d for d in dirs
+            if not d.startswith(".")
+            and d.lower() not in exclude_dirs
+            and (gitignore is None or not gitignore.is_ignored(os.path.join(root, d), is_dir=True))
+        ]
         for f in files:
             if f.endswith(".nf"):
                 file_path = os.path.join(root, f)
-                res = parse_nextflow_file(file_path, directory_path)
-                rules.update(res)
+                if gitignore is None or not gitignore.is_ignored(file_path, is_dir=False):
+                    res = parse_nextflow_file(file_path, directory_path)
+                    rules.update(res)
     return rules

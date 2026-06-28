@@ -106,7 +106,7 @@ def parse_python_file(file_path: str, base_dir: str) -> dict:
     
     return {"definitions": definitions, "calls": calls, "schemas": schema_reads}
 
-def parse_python_directory(directory_path: str) -> dict:
+def parse_python_directory(directory_path: str, gitignore=None) -> dict:
     """Recursively parses all Python files under directory_path, skipping non-source directories."""
     directory_path = os.path.abspath(directory_path)
     all_defs = []
@@ -117,16 +117,22 @@ def parse_python_directory(directory_path: str) -> dict:
     exclude_dirs = {"data", "results", "output", "out", "envs", "conda", "venv", "node_modules", "build", "dist", "logs", "benchmarks", "assets"}
     
     for root, dirs, files in os.walk(directory_path):
-        # Exclude hidden and non-source directories in-place
-        dirs[:] = [d for d in dirs if not d.startswith(".") and d.lower() not in exclude_dirs]
+        # Exclude hidden, non-source, and ignored directories in-place
+        dirs[:] = [
+            d for d in dirs
+            if not d.startswith(".")
+            and d.lower() not in exclude_dirs
+            and (gitignore is None or not gitignore.is_ignored(os.path.join(root, d), is_dir=True))
+        ]
         
         for f in files:
             if f.endswith(".py"):
                 file_path = os.path.join(root, f)
-                res = parse_python_file(file_path, directory_path)
-                all_defs.extend(res["definitions"])
-                all_calls.extend(res["calls"])
-                if "schemas" in res:
-                    all_schemas.extend(res["schemas"])
+                if gitignore is None or not gitignore.is_ignored(file_path, is_dir=False):
+                    res = parse_python_file(file_path, directory_path)
+                    all_defs.extend(res["definitions"])
+                    all_calls.extend(res["calls"])
+                    if "schemas" in res:
+                        all_schemas.extend(res["schemas"])
                 
     return {"definitions": all_defs, "calls": all_calls, "schemas": all_schemas}

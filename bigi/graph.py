@@ -17,6 +17,7 @@ from .parsers.nextflow import parse_nextflow_pipeline
 from .parsers.python import parse_python_directory
 from .parsers.generic import parse_generic_directory
 from .constants import R_BUILTINS
+from .gitignore import GitIgnore
 
 
 # ---------------------------------------------------------------------------
@@ -157,10 +158,11 @@ def build_graph(pipeline_dir: str) -> dict:
     - ``edges``: list of edge dicts (source, target, type, confidence, …)
     """
     pipeline_dir = os.path.abspath(pipeline_dir)
+    gitignore = GitIgnore(pipeline_dir)
     
     # 1. Parse rules from Snakemake and processes from Nextflow
-    rules = parse_pipeline(pipeline_dir)
-    nf_processes = parse_nextflow_pipeline(pipeline_dir)
+    rules = parse_pipeline(pipeline_dir, gitignore)
+    nf_processes = parse_nextflow_pipeline(pipeline_dir, gitignore)
     
     # Integrate Nextflow processes as rule-equivalent nodes
     for name, proc in nf_processes.items():
@@ -183,10 +185,18 @@ def build_graph(pipeline_dir: str) -> dict:
     r_files = []
     exclude_dirs = {"data", "results", "output", "out", "envs", "conda", "venv", "node_modules", "build", "dist", "logs", "benchmarks", "assets"}
     for root, dirs, files in os.walk(pipeline_dir):
-        dirs[:] = [d for d in dirs if not d.startswith(".") and d.lower() not in exclude_dirs]
+        # Prune ignored or excluded directories in-place
+        dirs[:] = [
+            d for d in dirs
+            if not d.startswith(".")
+            and d.lower() not in exclude_dirs
+            and not gitignore.is_ignored(os.path.join(root, d), is_dir=True)
+        ]
         for f in files:
             if f.lower().endswith((".r", ".rscript")):
-                r_files.append(os.path.join(root, f))
+                file_path = os.path.join(root, f)
+                if not gitignore.is_ignored(file_path, is_dir=False):
+                    r_files.append(file_path)
                 
     if r_files:
         import tempfile
@@ -218,14 +228,14 @@ def build_graph(pipeline_dir: str) -> dict:
     # 3. Parse Python scripts (definitions and calls)
     py_data: dict = {"definitions": [], "calls": []}
     try:
-        py_data = parse_python_directory(pipeline_dir)
+        py_data = parse_python_directory(pipeline_dir, gitignore)
     except Exception as exc:
         print(f"Warning: Could not parse Python files: {exc}")
 
     # 4. Parse other script files (Bash, Perl, Julia, MATLAB, Rust, Go, JS/TS, C/C++, etc.)
     generic_data: dict = {"definitions": [], "calls": []}
     try:
-        generic_data = parse_generic_directory(pipeline_dir)
+        generic_data = parse_generic_directory(pipeline_dir, gitignore)
     except Exception as exc:
         print(f"Warning: Could not parse generic files: {exc}")
 

@@ -10,13 +10,22 @@ import os
 from typing import Optional
 
 
-def find_snakemake_files(pipeline_dir: str) -> list[str]:
+def find_snakemake_files(pipeline_dir: str, gitignore=None) -> list[str]:
     """Return paths of all Snakefile / *.smk / *.snakefile files under *pipeline_dir*."""
     files: list[str] = []
-    for root, _, filenames in os.walk(pipeline_dir):
+    exclude_dirs = {"data", "results", "output", "out", "envs", "conda", "venv", "node_modules", "build", "dist", "logs", "benchmarks", "assets"}
+    for root, dirs, filenames in os.walk(pipeline_dir):
+        dirs[:] = [
+            d for d in dirs
+            if not d.startswith(".")
+            and d.lower() not in exclude_dirs
+            and (gitignore is None or not gitignore.is_ignored(os.path.join(root, d), is_dir=True))
+        ]
         for f in filenames:
             if f == "Snakefile" or f.endswith(".smk") or f.endswith(".snakefile"):
-                files.append(os.path.join(root, f))
+                file_path = os.path.join(root, f)
+                if gitignore is None or not gitignore.is_ignored(file_path, is_dir=False):
+                    files.append(file_path)
     return files
 
 
@@ -164,9 +173,9 @@ def parse_snakemake_file(file_path: str, base_dir: str) -> dict[str, dict]:
     return rules
 
 
-def parse_pipeline(pipeline_dir: str) -> dict[str, dict]:
+def parse_pipeline(pipeline_dir: str, gitignore=None) -> dict[str, dict]:
     """Parse all Snakemake files in *pipeline_dir* and return a combined rule mapping."""
     all_rules: dict[str, dict] = {}
-    for f in find_snakemake_files(pipeline_dir):
+    for f in find_snakemake_files(pipeline_dir, gitignore):
         all_rules.update(parse_snakemake_file(f, pipeline_dir))
     return all_rules
