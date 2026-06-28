@@ -4,7 +4,7 @@
 
 **Blast-radius Impact Graph Indexer**
 
-BiGI shows what breaks before you change the code in any codebase.
+BiGI shows what breaks before you change the code. Hosted at [AtlasMindAI/bigi](https://github.com/AtlasMindAI/bigi).
 
 [![CI](https://github.com/AtlasMindAI/bigi/actions/workflows/ci.yml/badge.svg)](https://github.com/AtlasMindAI/bigi/actions/workflows/ci.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)

@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0          # Required for git diff detection
 
       - name: BiGI Blast Radius
-        uses: BDB-Genomics/BiGI@main
+        uses: AtlasMindAI/BiGI@main
         with:
           pipeline-dir: '.'       # Path to your pipeline (default: repo root)
           # python-version: '3.11' # Optionally pin a different Python version

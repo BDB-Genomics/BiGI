@@ -1,1 +1,1 @@
-"""BiGI: BDB-Genomics Impact Graph package."""
+"""BiGI: AtlasMindAI Impact Graph package."""

@@ -3,7 +3,7 @@ description: >
   Analyze a bioinformatics pipeline with BiGI and post a blast radius report as
   a PR comment showing which downstream rules and functions are affected by the
   changes in this pull request.
-author: 'BDB-Genomics'
+author: 'AtlasMindAI'
 
 branding:
   icon: 'git-pull-request'
@@ -38,7 +38,7 @@ runs:
     # ── 3. Install BiGI ──
     - name: Install BiGI
       shell: bash
-      run: pip install "bigi @ git+https://github.com/BDB-Genomics/BiGI.git"
+      run: pip install "bigi @ git+https://github.com/AtlasMindAI/BiGI.git"
 
     # ── 4. Build the dependency graph (uses GITHUB_BASE_REF for diff detection) ──
     - name: Run BiGI Analysis

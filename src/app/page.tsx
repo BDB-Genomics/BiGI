@@ -93,7 +93,7 @@ export default function Home() {
 
               <input
                 type="text"
-                placeholder="BDB-Genomics/BiGI"
+                placeholder="AtlasMindAI/BiGI"
                 value={repoUrl}
                 onChange={(e) => setRepoUrl(e.target.value)}
                 className="min-w-0 flex-1 rounded-xl border border-transparent bg-transparent px-3 py-3 font-mono text-base text-white outline-none placeholder:text-slate-500 focus:border-cyan-300/30 focus:bg-white/5"
