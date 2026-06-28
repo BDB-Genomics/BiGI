@@ -3,11 +3,16 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const highlights = [
-  "Snakemake",
-  "Nextflow",
   "Python",
   "R",
+  "Snakemake",
+  "Nextflow",
+  "Go",
+  "Rust",
+  "JS / TS",
+  "C / C++",
   "Shell",
+  "Any codebase"
 ];
 
 function normalizeRepoInput(raw: string): string | null {
@@ -71,8 +76,7 @@ export default function Home() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl">
-            BiGI builds dependency graphs across Snakemake, Nextflow, Python, R, and shell scripts so
-            you can understand what a change touches before it ships.
+            BiGI builds dependency graphs across any codebase—with deep static AST analysis for Python and R, flow mapping for Snakemake and Nextflow, and universal regex-based parsing for other languages.
           </p>
         </header>
 
@@ -93,7 +97,7 @@ export default function Home() {
 
               <input
                 type="text"
-                placeholder="AtlasMindAI/BiGI"
+                placeholder="AtlasMindAI/bigi"
                 value={repoUrl}
                 onChange={(e) => setRepoUrl(e.target.value)}
                 className="min-w-0 flex-1 rounded-xl border border-transparent bg-transparent px-3 py-3 font-mono text-base text-white outline-none placeholder:text-slate-500 focus:border-cyan-300/30 focus:bg-white/5"
@@ -141,9 +145,9 @@ export default function Home() {
 
           <div className="grid gap-4 sm:grid-cols-3 lg:col-span-2">
             {[
-              ["No setup", "Run against a local directory or a public GitHub repo."],
-              ["Impact first", "Trace downstream rules, scripts, and schema reads."],
-              ["Exportable", "Generate HTML or GraphML for review and tooling."],
+              ["Universal Support", "Parse any codebase by automatically detecting non-binary text files and building structured function/call dependencies."],
+              ["AST-Level Precision", "Deep AST-level static dependency tracing for Python and R, alongside flow mapping for Snakemake and Nextflow."],
+              ["Smart Walk Filtering", "Automatically respects your .gitignore rules during walks, pruning vendor, logs, and build folders from analysis."],
             ].map(([title, body]) => (
               <div
                 key={title}

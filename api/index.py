@@ -172,12 +172,61 @@ def catch_all(path):
 
 def landing_page():
     return Response("""
-    <html>
-      <body style="background:#0a0a0f;color:white;font-family:sans-serif;text-align:center;padding-top:20vh;">
-        <h1 style="font-size:4rem;background:-webkit-linear-gradient(#818cf8, #34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">BiGI</h1>
-        <p style="font-size:1.5rem;color:#9ca3af;">Instantly visualize downstream impact in any GitHub codebase.</p>
-        <p style="color:#6b7280;margin-top:2rem;">Add <code style="background:#1a1a2e;padding:4px 8px;border-radius:4px;">/owner/repo</code> to the URL to get started.</p>
-        <p style="color:#4b5563;margin-top:1rem;">Example: <code style="background:#1a1a2e;padding:4px 8px;border-radius:4px;">/AtlasMindAI/bigi</code></p>
-      </body>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>BiGI - Blast-radius Impact Graph Indexer</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="relative min-h-screen bg-[#050508] text-slate-200 font-['Inter',sans-serif] overflow-x-hidden flex items-center justify-center">
+        <!-- Glow accents -->
+        <div class="absolute inset-0 pointer-events-none overflow-hidden">
+            <div class="absolute left-[-10%] top-[-10%] h-[30rem] w-[30rem] rounded-full bg-blue-500/10 blur-[120px]"></div>
+            <div class="absolute right-[-10%] bottom-[-10%] h-[30rem] w-[30rem] rounded-full bg-purple-500/10 blur-[120px]"></div>
+        </div>
+
+        <div class="relative z-10 max-w-4xl mx-auto px-6 py-16 text-center flex flex-col items-center">
+            <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs uppercase tracking-wider text-slate-300 font-['Outfit']">
+                <span class="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)]"></span>
+                Blast-Radius Impact Graph Indexer
+            </div>
+            
+            <h1 class="text-6xl font-bold tracking-tight text-white mb-6 font-['Outfit'] bg-gradient-to-r from-cyan-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent sm:text-7xl">
+                BiGI
+            </h1>
+            
+            <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mb-8 leading-relaxed">
+                Instantly visualize downstream impact in any public GitHub codebase. Builds dependency graphs across Python, R, Snakemake, Nextflow, Go, Rust, JS/TS, Shell, and more.
+            </p>
+
+            <div class="w-full max-w-md bg-slate-950/60 border border-white/10 p-6 rounded-3xl shadow-2xl backdrop-blur-xl mb-10">
+                <div class="text-left mb-4">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">To start analysis</label>
+                    <p class="text-sm text-slate-300">Append <code class="bg-white/5 border border-white/10 px-2 py-1 rounded font-mono text-cyan-300">/owner/repo</code> directly to the URL path.</p>
+                </div>
+                <div class="flex items-center justify-between bg-slate-900 border border-white/10 rounded-2xl p-4 font-mono text-sm">
+                    <span class="text-slate-400 select-none">Example:</span>
+                    <a href="/AtlasMindAI/bigi" class="text-cyan-400 hover:text-cyan-300 transition underline decoration-cyan-400/30">/AtlasMindAI/bigi</a>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-2 max-w-xl">
+                <span class="px-3.5 py-1.5 rounded-full bg-white/5 border border-white/5 text-xs text-slate-300">Python AST</span>
+                <span class="px-3.5 py-1.5 rounded-full bg-white/5 border border-white/5 text-xs text-slate-300">R AST</span>
+                <span class="px-3.5 py-1.5 rounded-full bg-white/5 border border-white/5 text-xs text-slate-300">Snakemake</span>
+                <span class="px-3.5 py-1.5 rounded-full bg-white/5 border border-white/5 text-xs text-slate-300">Nextflow</span>
+                <span class="px-3.5 py-1.5 rounded-full bg-white/5 border border-white/5 text-xs text-slate-300">Go</span>
+                <span class="px-3.5 py-1.5 rounded-full bg-white/5 border border-white/5 text-xs text-slate-300">Rust</span>
+                <span class="px-3.5 py-1.5 rounded-full bg-white/5 border border-white/5 text-xs text-slate-300">JS / TS</span>
+                <span class="px-3.5 py-1.5 rounded-full bg-white/5 border border-white/5 text-xs text-slate-300">C / C++</span>
+                <span class="px-3.5 py-1.5 rounded-full bg-white/5 border border-white/5 text-xs text-slate-300">Shell</span>
+            </div>
+        </div>
+    </body>
     </html>
     """, mimetype='text/html')
