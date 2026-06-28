@@ -93,3 +93,37 @@ def test_catch_all_uses_default_branch(monkeypatch, tmp_path):
     assert response.status_code == 200
     assert captured["url"] == "https://github.com/alice/demo/archive/refs/heads/trunk.zip"
     assert captured["repo_dir"]
+
+
+def test_catch_all_invalid_parameters():
+    vercel = load_vercel_module()
+    response = vercel.catch_all("alice/demo-malicious-repo-with-spaces ")
+    assert response.status_code == 400
+    assert "Invalid parameters" in response.data
+
+    response = vercel.catch_all("<script>alert(1)</script>/demo")
+    assert response.status_code == 400
+    assert "Invalid parameters" in response.data
+    assert "&lt;script&gt;alert(1)&lt;" in response.data
+    assert "script&gt;" in response.data
+
+
+def test_catch_all_zip_slip(monkeypatch):
+    vercel = load_vercel_module()
+
+    def fake_resolve_default_branch(owner, repo):
+        return "trunk"
+
+    def fake_urlretrieve(url, zip_path):
+        with zipfile.ZipFile(zip_path, "w") as zf:
+            # Attempt directory traversal out of target extract directory
+            zf.writestr("../traversal.txt", "malicious payload")
+        return zip_path, None
+
+    monkeypatch.setattr(vercel, "resolve_default_branch", fake_resolve_default_branch)
+    monkeypatch.setattr(vercel.urllib.request, "urlretrieve", fake_urlretrieve)
+
+    response = vercel.catch_all("alice/demo")
+    # Should catch the Exception / RuntimeError from zip slip check and return 500
+    assert response.status_code == 500
+    assert "Attempted Path Traversal in Zip File" in response.data

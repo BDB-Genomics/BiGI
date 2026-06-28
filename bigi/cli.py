@@ -32,9 +32,13 @@ def export_html(graph_data: dict, output_path: str, selected_node_id: Optional[s
     data = copy.deepcopy(graph_data)
     data["selected_node_id"] = selected_node_id
 
+    json_str = json.dumps(data, indent=2)
+    # Escape characters that could terminate or alter script contexts inside HTML script tags
+    json_str = json_str.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+
     html_content = HTML_TEMPLATE.replace(
         "const graphData = // __DATA__;",
-        f"const graphData = {json.dumps(data, indent=2)};",
+        f"const graphData = {json_str};",
     )
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html_content)
@@ -73,6 +77,19 @@ def export_graphml(graph_data: dict, output_path: str) -> None:
         f.write(xmlstr)
 
 
+def safe_extract(zf, target_dir):
+    target_dir = os.path.abspath(target_dir)
+    for member in zf.infolist():
+        target_path = os.path.abspath(os.path.join(target_dir, member.filename))
+        try:
+            common = os.path.commonpath([target_dir, target_path])
+        except ValueError:
+            raise RuntimeError(f"Attempted Path Traversal in Zip File: {member.filename}")
+        if common != target_dir:
+            raise RuntimeError(f"Attempted Path Traversal in Zip File: {member.filename}")
+        zf.extract(member, target_dir)
+
+
 def _fetch_pipeline_dir(pdir: str, temp_dirs: list) -> str:
     """Clone a URL into a temporary directory if needed."""
     is_url = pdir.startswith(("http://", "https://", "git@", "git://"))
@@ -91,7 +108,7 @@ def _fetch_pipeline_dir(pdir: str, temp_dirs: list) -> str:
         zip_path = os.path.join(target_dir, "archive.zip")
         urllib.request.urlretrieve(pdir, zip_path)
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(target_dir)
+            safe_extract(zip_ref, target_dir)
         contents = os.listdir(target_dir)
         if len(contents) == 1 and os.path.isdir(os.path.join(target_dir, contents[0])):
             return os.path.join(target_dir, contents[0])

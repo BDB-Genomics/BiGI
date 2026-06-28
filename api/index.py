@@ -13,6 +13,21 @@ import urllib.request
 import traceback
 from urllib.error import HTTPError
 from typing import Optional
+import html
+import re
+
+def safe_extract(zf, target_dir):
+    target_dir = os.path.abspath(target_dir)
+    for member in zf.infolist():
+        target_path = os.path.abspath(os.path.join(target_dir, member.filename))
+        try:
+            common = os.path.commonpath([target_dir, target_path])
+        except ValueError:
+            raise RuntimeError(f"Attempted Path Traversal in Zip File: {member.filename}")
+        if common != target_dir:
+            raise RuntimeError(f"Attempted Path Traversal in Zip File: {member.filename}")
+        zf.extract(member, target_dir)
+
 
 from bigi.graph import build_graph
 from bigi.cli import export_html
@@ -52,6 +67,20 @@ def catch_all(path):
     owner = parts[0]
     repo = parts[1]
 
+    # Validate owner and repo to prevent XSS, SSRF, and command injection
+    if not re.match(r"^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,38}[a-zA-Z0-9])?$", owner) or \
+       not re.match(r"^[a-zA-Z0-9._-]{1,100}$", repo):
+        safe_owner = html.escape(owner)
+        safe_repo = html.escape(repo)
+        err_html = f"""
+        <html><body style="font-family:sans-serif;padding:2rem;background:#0a0a0f;color:white;">
+          <h1 style="color:#f87171;">Invalid parameters</h1>
+          <p>The owner <strong>{safe_owner}</strong> or repository <strong>{safe_repo}</strong> contains invalid characters.</p>
+          <a href="/" style="color:#818cf8;">← Back to home</a>
+        </body></html>
+        """
+        return Response(err_html, status=400, mimetype='text/html')
+
     with tempfile.TemporaryDirectory() as tmpdir:
         try:
             # Download repo as zip archive (no git binary required)
@@ -82,7 +111,7 @@ def catch_all(path):
                 raise last_error
 
             with zipfile.ZipFile(zip_path, 'r') as zf:
-                zf.extractall(extract_dir)
+                safe_extract(zf, extract_dir)
 
             # GitHub zips have a single top-level folder like "repo-main/"
             contents = os.listdir(extract_dir)
@@ -106,11 +135,13 @@ def catch_all(path):
             return Response(html_content, mimetype='text/html')
 
         except HTTPError as e:
+            safe_owner = html.escape(owner)
+            safe_repo = html.escape(repo)
             if e.code == 404:
                 err_html = f"""
                 <html><body style="font-family:sans-serif;padding:2rem;background:#0a0a0f;color:white;">
                   <h1 style="color:#f87171;">Repository not found</h1>
-                  <p>Could not find <strong>github.com/{owner}/{repo}</strong>.</p>
+                  <p>Could not find <strong>github.com/{safe_owner}/{safe_repo}</strong>.</p>
                   <p style="color:#9ca3af;">Make sure the repository exists, is public, and has a reachable default branch.</p>
                   <a href="/" style="color:#818cf8;">← Back to home</a>
                 </body></html>
@@ -119,17 +150,19 @@ def catch_all(path):
                 err_html = f"""
                 <html><body style="font-family:sans-serif;padding:2rem;background:#0a0a0f;color:white;">
                   <h1 style="color:#f87171;">GitHub error (HTTP {e.code})</h1>
-                  <p>Failed to download <strong>github.com/{owner}/{repo}</strong>.</p>
+                  <p>Failed to download <strong>github.com/{safe_owner}/{safe_repo}</strong>.</p>
                   <a href="/" style="color:#818cf8;">← Back to home</a>
                 </body></html>
                 """
             return Response(err_html, status=e.code, mimetype='text/html')
 
         except Exception as e:
+            safe_owner = html.escape(owner)
+            safe_repo = html.escape(repo)
             err_html = f"""
             <html><body style="font-family:sans-serif;padding:2rem;background:#0a0a0f;color:white;">
               <h1 style="color:#f87171;">Error analyzing repository</h1>
-              <p>Could not analyze <strong>github.com/{owner}/{repo}</strong>.</p>
+              <p>Could not analyze <strong>github.com/{safe_owner}/{safe_repo}</strong>.</p>
               <pre style="background:#1a1a2e;padding:1rem;border-radius:8px;overflow-x:auto;color:#fbbf24;">{traceback.format_exc()}</pre>
               <a href="/" style="color:#818cf8;">← Back to home</a>
             </body></html>

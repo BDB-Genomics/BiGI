@@ -414,14 +414,16 @@ def build_graph(pipeline_dir: str) -> dict:
         if os.environ.get("GITHUB_BASE_REF"):
             # In a GitHub PR, compare against the base branch
             base_ref = os.environ.get("GITHUB_BASE_REF")
-            res_git = subprocess.run(
-                ["git", "diff", "--name-only", f"origin/{base_ref}"],
-                cwd=pipeline_dir,
-                capture_output=True, text=True, check=True
-            )
-            for line in res_git.stdout.splitlines():
-                if line.strip():
-                    modified_files.add(os.path.normpath(line.strip()))
+            # Sanitize/validate branch/ref format to prevent command or option injection
+            if base_ref and re.match(r"^[a-zA-Z0-9_/.-]+$", base_ref) and ".." not in base_ref:
+                res_git = subprocess.run(
+                    ["git", "diff", "--name-only", f"origin/{base_ref}"],
+                    cwd=pipeline_dir,
+                    capture_output=True, text=True, check=True
+                )
+                for line in res_git.stdout.splitlines():
+                    if line.strip():
+                        modified_files.add(os.path.normpath(line.strip()))
         else:
             # Local working directory: check uncommitted changes
             res_git = subprocess.run(
