@@ -3937,8 +3937,8 @@
                 const isLinkHovered = hoveredNode && (hoveredNode.id === s.id || hoveredNode.id === t.id);
                 const showLabels = isLinkSelected || isLinkHovered;
                 if (!isPanMode && l.label && showLabels && isLinkHighlighted) {
-                    const mx = 0.25 * s.x + 0.5 * qx + 0.25 * t.x;
-                    const my = 0.25 * s.y + 0.5 * qy + 0.25 * t.y;
+                    const mx = 0.125 * s.x + 0.375 * cp1x + 0.375 * cp2x + 0.125 * t.x;
+                    const my = 0.125 * s.y + 0.375 * cp1y + 0.375 * cp2y + 0.125 * t.y;
 
                     let textAngle = Math.atan2(t.y - s.y, t.x - s.x);
                     if (textAngle > Math.PI / 2 || textAngle < -Math.PI / 2) {
@@ -4010,18 +4010,18 @@
                 let dist = Math.sqrt(dx*dx + dy*dy);
                 if (dist < 1) dist = 1;
                 
-                let nx = -dy / dist;
-                let ny = dx / dist;
-                let curveOffset = dist * 0.12; 
-                let qx = (s.x + t.x) / 2 + nx * curveOffset;
-                let qy = (s.y + t.y) / 2 + ny * curveOffset;
+                const cp1x = s.x + Math.max(30, dx * 0.5);
+                const cp1y = s.y;
+                const cp2x = t.x - Math.max(30, dx * 0.5);
+                const cp2y = t.y;
 
                 const offset = (s.x + s.y) * 0.003;
                 const progress = (pulseTime + offset) % 1.0;
                 
-                // Calculate coordinate along quadratic Bezier curve
-                const px = (1-progress)*(1-progress)*s.x + 2*(1-progress)*progress*qx + progress*progress*t.x;
-                const py = (1-progress)*(1-progress)*s.y + 2*(1-progress)*progress*qy + progress*progress*t.y;
+                // Calculate coordinate along horizontal cubic Bezier curve
+                const u = 1 - progress;
+                const px = u*u*u*s.x + 3*u*u*progress*cp1x + 3*u*progress*progress*cp2x + progress*progress*progress*t.x;
+                const py = u*u*u*s.y + 3*u*u*progress*cp1y + 3*u*progress*progress*cp2y + progress*progress*progress*t.y;
 
                 let pulseColor = "rgba(255, 255, 255, 0.4)";
                 if (isPathActive && pathTracingLinks.has(l)) {
